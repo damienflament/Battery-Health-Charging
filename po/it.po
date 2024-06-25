@@ -10,7 +10,7 @@ msgstr ""
 "Project-Id-Version: unnamed project\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2024-06-18 10:53-0700\n"
-"PO-Revision-Date: 2024-02-25 18:31+0100\n"
+"PO-Revision-Date: 2024-06-25 20:07 +0200\n"
 "Last-Translator: Albano Battistella <albanobattistella@gmail.com>\n"
 "Language-Team: Italian <>\n"
 "Language: it\n"
@@ -597,7 +597,7 @@ msgstr ""
 
 #: ui/thinkpad.ui:24
 msgid "Skip Threshold Verification"
-msgstr ""
+msgstr "Salta la verifica della soglia"
 
 #: ui/thinkpad.ui:25
 msgid ""
@@ -605,6 +605,9 @@ msgid ""
 "verification failures. Enabling this option will write new threshold values "
 "without verifying if they were applied correctly."
 msgstr ""
+"Alcuni modelli ThinkPad potrebbero leggere i valori di soglia in modo errato, causando "
+"errori di verifica. Abilitando questa opzione verranno scritti nuovi valori di soglia "
+"senza verificare se sono stati applicati correttamente."
 
 #: ui/thresholdPrimary.ui:21 ui/thresholdSecondary.ui:21
 msgid "Customize"
