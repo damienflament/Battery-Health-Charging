@@ -256,6 +256,14 @@ case "$TOOLCMD" in
         echo "$ARG1" > "$CMB1_END_PATH"
         exit ${EXIT_SUCCESS}
         ;;
+    FRAMEWORK_TOOL_THRESHOLD_READ)
+        framework_tool --driver "$ARG1" --charge-limit
+        exit ${EXIT_SUCCESS}
+        ;;
+    FRAMEWORK_TOOL_THRESHOLD_WRITE)
+        framework_tool --driver "$ARG1" --charge-limit "$ARG2"
+        exit ${EXIT_SUCCESS}
+        ;;
     CHECKINSTALLATION)
         printf -v versions '%s\n%s' "$(pkaction --version | cut -d' ' -f3)" "0.106"
         if [[ $versions != "$(sort -V <<< "$versions")" ]];then

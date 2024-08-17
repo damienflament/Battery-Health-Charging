@@ -1,18 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <schemalist gettext-domain="gnome-shell-extensions">
     <schema path="/org/gnome/shell/extensions/Battery-Health-Charging/" id="org.gnome.shell.extensions.Battery-Health-Charging">
-        <key name="charging-mode" type="s">
-            <default>"ful"</default>
-            <summary>'ful' = Full Capacity mode, 'bal' = balance mode, 'max' = maximum lifespan mode</summary>
-        </key>
+
+        <!-- Extension data -->
+
         <key name="device-type" type="i">
             <default>0</default>
             <summary>Type fo device found during init</summary>
         </key>
-        <key name="show-battery-panel2" type="b">
-            <default>false</default>
-            <summary>show battery panel 2 if true</summary>
+        <key name="ctl-path" type="s">
+            <default>""</default>
+            <summary>Path of ctl</summary>
         </key>
+
+        <!-- General settings -->
+
         <key name="icon-style-type" type="i">
             <default>0</default>
             <summary>icon sytle 0 = symbol only, 1 = symbols and percentage, 2 = percetage highlighted</summary>
@@ -53,42 +55,13 @@
             <default>"not-installed"</default>
             <summary>Install service</summary>
         </key>
-        <key name="ctl-path" type="s">
-            <default>""</default>
-            <summary>Path of ctl</summary>
+
+        <!-- Threshold Single/Main Battery settings -->
+        <key name="charging-mode" type="s">
+            <default>"ful"</default>
+            <summary>'ful' = Full Capacity mode, 'bal' = balance mode, 'max' = maximum lifespan mode</summary>
         </key>
-        <key name="detected-libsmbios" type="b">
-            <default>false</default>
-            <summary>Detected dells libsmbios package</summary>
-        </key>
-        <key name="detected-cctk" type="b">
-            <default>false</default>
-            <summary>Detected dells cctk package</summary>
-        </key>
-        <key name="dell-package-type" type="i">
-            <default>0</default>
-            <summary>Dell package selection 0:libsmbios 1:cctk</summary>
-        </key>
-        <key name="apple-charging-led" type="b">
-            <default>false</default>
-            <summary>Apple charging LED</summary>
-        </key>
-        <key name="need-bios-password" type="b">
-            <default>false</default>
-            <summary>Need Bios password</summary>
-        </key>
-        <key name="force-discharge-feature" type="b">
-            <default>false</default>
-            <summary>Enable force discharge feature</summary>
-        </key>
-        <key name="force-discharge-enabled" type="b">
-            <default>false</default>
-            <summary>Enable force discharge</summary>
-        </key>
-        <key name="skip-threshold-verification" type="b">
-            <default>false</default>
-            <summary>Skip threshold verification</summary>
-        </key>
+        
         <key name="default-threshold" type="b">
             <default>true</default>
             <summary>Toggle between default and customized threshold</summary>
@@ -148,6 +121,12 @@
         <key name="current-max-start-threshold" type="i">
             <default>55</default>
             <summary>maxlife mode start threshold applied value</summary>
+        </key>
+
+        <!-- Threshold Aux Battery settings -->
+        <key name="show-battery-panel2" type="b">
+            <default>false</default>
+            <summary>show battery panel 2 if true</summary>
         </key>
         <key name="charging-mode2" type="s">
             <default>"ful"</default>
@@ -213,5 +192,60 @@
             <default>55</default>
             <summary>maxlife mode start threshold applied value</summary>
         </key>
+
+        <!-- Device settings -->
+
+        <!-- Dell -->
+        <key name="detected-libsmbios" type="b">
+            <default>false</default>
+            <summary>Detected dells libsmbios package</summary>
+        </key>
+        <key name="detected-cctk" type="b">
+            <default>false</default>
+            <summary>Detected dells cctk package</summary>
+        </key>
+        <key name="dell-package-type" type="i">
+            <default>0</default>
+            <summary>Dell package selection 0:libsmbios 1:cctk</summary>
+        </key>
+        <key name="need-bios-password" type="b">
+            <default>false</default>
+            <summary>Need Bios password</summary>
+        </key>
+
+        <!-- Apple -->
+        <key name="apple-charging-led" type="b">
+            <default>false</default>
+            <summary>Apple charging LED</summary>
+        </key>
+
+        <!-- Thinkpad -->
+        <key name="force-discharge-feature" type="b">
+            <default>false</default>
+            <summary>Enable force discharge feature</summary>
+        </key>
+        <key name="force-discharge-enabled" type="b">
+            <default>false</default>
+            <summary>Enable force discharge</summary>
+        </key>
+        <key name="skip-threshold-verification" type="b">
+            <default>false</default>
+            <summary>Skip threshold verification</summary>
+        </key>
+
+        <!-- Framework -->
+        <key name="detected-framework-sysfs" type="b">
+            <default>false</default>
+            <summary>Detected frameworks threshold sysfs</summary>
+        </key>
+        <key name="detected-framework-tool" type="b">
+            <default>false</default>
+            <summary>Detected frameworks tool package</summary>
+        </key>
+        <key name="framework-apply-threshold-mode" type="i">
+            <default>0</default>
+            <summary>Framework mode selection 0:sysfs 1:framework_tool</summary>
+        </key>
+
     </schema>
 </schemalist>

@@ -8,6 +8,7 @@ const {fileExists, readFileInt, runCommandCtl} = Helper;
 
 const VENDOR_FRAMEWORK = '/sys/devices/platform/framework_laptop';
 const BAT1_END_PATH = '/sys/class/power_supply/BAT1/charge_control_end_threshold';
+const CROS_EC_PATH = '/dev/cros_ec';
 
 
 export const FrameworkSingleBatteryBAT1 = GObject.registerClass({
@@ -43,18 +44,45 @@ export const FrameworkSingleBatteryBAT1 = GObject.registerClass({
     isAvailable() {
         if (!fileExists(VENDOR_FRAMEWORK))
             return false;
-        if (!fileExists(BAT1_END_PATH))
+
+        this._hasSysfsNode = fileExists(BAT1_END_PATH);
+        this._hasFrameworkTool = !!GLib.find_program_in_path('framework_tool');
+        if (!this._hasSysfsNode && !this._hasFrameworkTool)
             return false;
+
+        this._settings.set_boolean('detected-framework-sysfs', this._hasSysfsNode);
+        this._settings.set_boolean('detected-framework-tool', this._hasFrameworkTool);
+
+        if (this._hasFrameworkTool)
+            this._frameworkToolDriver = fileExists(CROS_EC_PATH) ? 'cros_ec' : 'portio';
+
         return true;
     }
 
     async setThresholdLimit(chargingMode) {
-        this._status = 0;
-        const ctlPath = this._settings.get_string('ctl-path');
+        let status = 0;
+        this._ctlPath = this._settings.get_string('ctl-path');
         this._endValue = this._settings.get_int(`current-${chargingMode}-end-threshold`);
+
+        if (this._hasSysfsNode && this._hasFrameworkTool) {
+            const frameworkApplyThresholdMode = this._settings.get_int('framework-apply-threshold-mode');
+            if (frameworkApplyThresholdMode === 0)
+                status = await this._setThresholdLimitSysFs();
+            else if (frameworkApplyThresholdMode === 1)
+                status = await this._setThresholdFrameworkTool();
+        } else if (this._hasSysfsNode) {
+            status = await this._setThresholdLimitSysFs();
+        } else if (this._hasFrameworkTool) {
+            status = await this._setThresholdFrameworkTool();
+        }
+        return status;
+    }
+
+    async _setThresholdLimitSysFs() {
+        this._status = 0;
         if (this._verifyThreshold())
             return this._status;
-        [this._status] = await runCommandCtl(ctlPath, 'BAT1_END', `${this._endValue}`, null, null);
+        [this._status] = await runCommandCtl(this._ctlPath, 'BAT1_END', `${this._endValue}`, null, null);
         if (this._status === 0) {
             if (this._verifyThreshold())
                 return this._status;
@@ -87,6 +115,33 @@ export const FrameworkSingleBatteryBAT1 = GObject.registerClass({
                 return;
         }
         this.emit('threshold-applied', 'failed');
+    }
+
+    async _setThresholdFrameworkTool() {
+        let output = await runCommandCtl(this._ctlPath, 'FRAMEWORK_TOOL_THRESHOLD_READ', this._frameworkToolDriver, null, null);
+        if (this._verifyFrameworkToolThreshold(output))
+            return 0;
+
+        output = await runCommandCtl(this._ctlPath, 'FRAMEWORK_TOOL_THRESHOLD_WRITE', this._frameworkToolDriver, this._endValue, null);
+        if (this._verifyFrameworkToolThreshold(output))
+            return 0;
+
+        this.emit('threshold-applied', 'failed');
+        return 1;
+    }
+
+    _verifyFrameworkToolThreshold(output) {
+        let endValue;
+        const matchOutput = output[1].trim().match(/Minimum 0%, Maximum (\d+)%/);
+        if (matchOutput) {
+            endValue = parseInt(matchOutput[1]);
+            if (!isNaN(endValue) && endValue > 0 && endValue <= 100 && this._endValue ===  endValue) {
+                this.endLimitValue = this._endValue;
+                this.emit('threshold-applied', 'success');
+                return true;
+            }
+        }
+        return false;
     }
 
     destroy() {
