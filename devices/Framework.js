@@ -4,7 +4,7 @@ import GLib from 'gi://GLib';
 import GObject from 'gi://GObject';
 import * as Helper from '../lib/helper.js';
 
-const {fileExists, readFileInt, runCommandCtl} = Helper;
+const {fileExists, readFileInt, readFile, runCommandCtl} = Helper;
 
 const VENDOR_FRAMEWORK = '/sys/devices/platform/framework_laptop';
 const BAT1_END_PATH = '/sys/class/power_supply/BAT1/charge_control_end_threshold';
@@ -42,7 +42,7 @@ export const FrameworkSingleBatteryBAT1 = GObject.registerClass({
     }
 
     isAvailable() {
-        if (!fileExists(VENDOR_FRAMEWORK))
+        if (!readFile('/sys/devices/virtual/dmi/id/sys_vendor').includes('Framework'))
             return false;
 
         this._hasSysfsNode = fileExists(BAT1_END_PATH);
@@ -54,7 +54,7 @@ export const FrameworkSingleBatteryBAT1 = GObject.registerClass({
         this._settings.set_boolean('detected-framework-tool', this._hasFrameworkTool);
 
         if (this._hasFrameworkTool)
-            this._frameworkToolDriver = fileExists(CROS_EC_PATH) ? 'cros_ec' : 'portio';
+            this._frameworkToolDriver = fileExists(CROS_EC_PATH) ? 'cros-ec' : 'portio';
 
         return true;
     }
@@ -122,7 +122,7 @@ export const FrameworkSingleBatteryBAT1 = GObject.registerClass({
         if (this._verifyFrameworkToolThreshold(output))
             return 0;
 
-        output = await runCommandCtl(this._ctlPath, 'FRAMEWORK_TOOL_THRESHOLD_WRITE', this._frameworkToolDriver, this._endValue, null);
+        output = await runCommandCtl(this._ctlPath, 'FRAMEWORK_TOOL_THRESHOLD_WRITE', this._frameworkToolDriver, `${this._endValue}`, null);
         if (this._verifyFrameworkToolThreshold(output))
             return 0;
 

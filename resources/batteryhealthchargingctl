@@ -51,6 +51,9 @@ ARG1=${2:-0}
 ARG2=${3:-0}
 ARG3=${4:-0}
 
+source /etc/profile
+test -r "$HOME/.profile" && source "$HOME/.profile"
+
 case "$TOOLCMD" in
     BAT0_END)
         echo "$ARG1" > "$BAT0_END_PATH"
