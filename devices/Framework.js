@@ -4,7 +4,7 @@ import GLib from 'gi://GLib';
 import GObject from 'gi://GObject';
 import * as Helper from '../lib/helper.js';
 
-const {fileExists, readFileInt, readFile, runCommandCtl} = Helper;
+const {exitCode, fileExists, readFileInt, readFile, runCommandCtl} = Helper;
 
 const VENDOR_FRAMEWORK = '/sys/devices/platform/framework_laptop';
 const BAT1_END_PATH = '/sys/class/power_supply/BAT1/charge_control_end_threshold';
@@ -61,7 +61,7 @@ export const FrameworkSingleBatteryBAT1 = GObject.registerClass({
     }
 
     async setThresholdLimit(chargingMode) {
-        let status = 0;
+        let status;
         this._endValue = this._settings.get_int(`current-${chargingMode}-end-threshold`);
 
         if (this._hasSysfsNode && this._hasFrameworkTool) {
@@ -79,26 +79,34 @@ export const FrameworkSingleBatteryBAT1 = GObject.registerClass({
     }
 
     async _setThresholdLimitSysFs() {
-        this._status = 0;
         if (this._verifyThreshold())
-            return this._status;
+            return exitCode.SUCCESS;
 
-        [this._status] = await runCommandCtl(this.ctlPath, 'BAT1_END', `${this._endValue}`, null, null);
-        if (this._status === 0) {
-            if (this._verifyThreshold())
-                return this._status;
+        const [status] = await runCommandCtl(this.ctlPath, 'BAT1_END', `${this._endValue}`, null, null);
+        if (status === exitCode.ERROR) {
+            this.emit('threshold-applied', 'failed');
+            return exitCode.ERROR;
         }
+
+        if (this._verifyThreshold())
+            return exitCode.SUCCESS;
 
         if (this._delayReadTimeoutId)
             GLib.source_remove(this._delayReadTimeoutId);
         this._delayReadTimeoutId = null;
 
-        this._delayReadTimeoutId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 200, () => {
-            this._reVerifyThreshold();
-            this._delayReadTimeoutId = null;
-            return GLib.SOURCE_REMOVE;
+        await new Promise(resolve => {
+            this._delayReadTimeoutId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 200, () => {
+                resolve();
+                return GLib.SOURCE_REMOVE;
+            });
         });
-        return this._status;
+
+        if (this._verifyThreshold())
+            return exitCode.SUCCESS;
+
+        this.emit('threshold-applied', 'failed');
+        return exitCode.ERROR;
     }
 
     _verifyThreshold() {
@@ -110,30 +118,32 @@ export const FrameworkSingleBatteryBAT1 = GObject.registerClass({
         return false;
     }
 
-    _reVerifyThreshold() {
-        if (this._status === 0) {
-            if (this._verifyThreshold())
-                return;
-        }
-        this.emit('threshold-applied', 'failed');
-    }
-
     async _setThresholdFrameworkTool() {
-        let output = await runCommandCtl(this.ctlPath, 'FRAMEWORK_TOOL_THRESHOLD_READ', this._frameworkToolDriver, null, null);
-        if (this._verifyFrameworkToolThreshold(output))
-            return 0;
+        let [status, output] = await runCommandCtl(this.ctlPath, 'FRAMEWORK_TOOL_THRESHOLD_READ', this._frameworkToolDriver, null, null);
+        if (status === exitCode.ERROR) {
+            this.emit('threshold-applied', 'failed');
+            return exitCode.ERROR;
+        }
 
-        output = await runCommandCtl(this.ctlPath, 'FRAMEWORK_TOOL_THRESHOLD_WRITE', this._frameworkToolDriver, `${this._endValue}`, null);
         if (this._verifyFrameworkToolThreshold(output))
-            return 0;
+            return exitCode.SUCCESS;
+
+        [status, output] = await runCommandCtl(this.ctlPath, 'FRAMEWORK_TOOL_THRESHOLD_WRITE', this._frameworkToolDriver, `${this._endValue}`, null);
+        if (status === exitCode.ERROR) {
+            this.emit('threshold-applied', 'failed');
+            return exitCode.ERROR;
+        }
+
+        if (this._verifyFrameworkToolThreshold(output))
+            return exitCode.SUCCESS;
 
         this.emit('threshold-applied', 'failed');
-        return 1;
+        return exitCode.ERROR;
     }
 
     _verifyFrameworkToolThreshold(output) {
         let endValue;
-        const matchOutput = output[1].trim().match(/Minimum 0%, Maximum (\d+)%/);
+        const matchOutput = output.trim().match(/Minimum 0%, Maximum (\d+)%/);
         if (matchOutput) {
             endValue = parseInt(matchOutput[1]);
             if (!isNaN(endValue) && endValue > 0 && endValue <= 100 && this._endValue ===  endValue) {
