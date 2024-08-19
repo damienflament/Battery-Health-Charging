@@ -45,7 +45,9 @@ export const FrameworkSingleBatteryBAT1 = GObject.registerClass({
             return false;
 
         this._hasSysfsNode = fileExists(BAT1_END_PATH);
-        this._hasFrameworkTool = !!GLib.find_program_in_path('framework_tool');
+        this._frameworkToolPath = GLib.find_program_in_path('framework_tool');
+        this._hasFrameworkTool = !!this._frameworkToolPath;
+
         if (!this._hasSysfsNode && !this._hasFrameworkTool)
             return false;
 
@@ -114,7 +116,7 @@ export const FrameworkSingleBatteryBAT1 = GObject.registerClass({
 
     async _setThresholdFrameworkTool() {
         const frameworkToolDriver = fileExists(CROS_EC_PATH) ? 'cros-ec' : 'portio';
-        let [status, output] = await runCommandCtl(this.ctlPath, 'FRAMEWORK_TOOL_THRESHOLD_READ', frameworkToolDriver, null, null);
+        let [status, output] = await runCommandCtl(this.ctlPath, 'FRAMEWORK_TOOL_THRESHOLD_READ', this._frameworkToolPath, frameworkToolDriver, null);
         if (status === exitCode.ERROR) {
             this.emit('threshold-applied', 'failed');
             return exitCode.ERROR;
@@ -123,7 +125,7 @@ export const FrameworkSingleBatteryBAT1 = GObject.registerClass({
         if (this._verifyFrameworkToolThreshold(output))
             return exitCode.SUCCESS;
 
-        [status, output] = await runCommandCtl(this.ctlPath, 'FRAMEWORK_TOOL_THRESHOLD_WRITE', frameworkToolDriver, `${this._endValue}`, null);
+        [status, output] = await runCommandCtl(this.ctlPath, 'FRAMEWORK_TOOL_THRESHOLD_WRITE', this._frameworkToolPath, frameworkToolDriver, `${this._endValue}`);
         if (status === exitCode.ERROR) {
             this.emit('threshold-applied', 'failed');
             return exitCode.ERROR;

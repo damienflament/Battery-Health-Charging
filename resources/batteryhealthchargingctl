@@ -55,9 +55,6 @@ ARG1=${2:-0}
 ARG2=${3:-0}
 ARG3=${4:-0}
 
-source /etc/profile
-test -r "$HOME/.profile" && source "$HOME/.profile"
-
 function exit_modifier() {
     if [ "$1" -eq 0 ] && [ "$2" -eq 0 ]; then
         exit ${EXIT_SUCCESS}
@@ -338,14 +335,22 @@ case "$TOOLCMD" in
         exit_modifier "$COMMAND1_EXIT_STATUS" "$COMMAND2_EXIT_STATUS"
         ;;
     FRAMEWORK_TOOL_THRESHOLD_READ)
-        framework_tool --driver "$ARG1" --charge-limit
-        COMMAND1_EXIT_STATUS="$?"
-        exit_modifier "$COMMAND1_EXIT_STATUS" "$COMMAND2_EXIT_STATUS"
+        if [[ $ARG1 == */framework_tool ]]; then
+            "$ARG1" --driver "$ARG2" --charge-limit
+            COMMAND1_EXIT_STATUS="$?"
+            exit_modifier "$COMMAND1_EXIT_STATUS" "$COMMAND2_EXIT_STATUS"
+        else
+            exit ${EXIT_ERROR}
+        fi
         ;;
     FRAMEWORK_TOOL_THRESHOLD_WRITE)
-        framework_tool --driver "$ARG1" --charge-limit "$ARG2"
-        COMMAND1_EXIT_STATUS="$?"
-        exit_modifier "$COMMAND1_EXIT_STATUS" "$COMMAND2_EXIT_STATUS"
+        if [[ $ARG1 == */framework_tool ]]; then
+            "$ARG1" --driver "$ARG2" --charge-limit "$ARG3"
+            COMMAND1_EXIT_STATUS="$?"
+            exit_modifier "$COMMAND1_EXIT_STATUS" "$COMMAND2_EXIT_STATUS"
+        else
+            exit ${EXIT_ERROR}
+        fi
         ;;
     CHECKINSTALLATION)
         printf -v versions '%s\n%s' "$(pkaction --version | cut -d' ' -f3)" "0.106"
