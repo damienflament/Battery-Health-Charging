@@ -336,6 +336,7 @@ case "$TOOLCMD" in
         echo "$ARG1" > "$CMB1_END_PATH"
         COMMAND1_EXIT_STATUS="$?"
         exit_modifier "$COMMAND1_EXIT_STATUS" "$COMMAND2_EXIT_STATUS"
+        ;;
     FRAMEWORK_TOOL_THRESHOLD_READ)
         framework_tool --driver "$ARG1" --charge-limit
         COMMAND1_EXIT_STATUS="$?"
