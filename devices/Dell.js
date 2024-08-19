@@ -47,6 +47,7 @@ export const DellSmBiosSingleBattery = GObject.registerClass({
         this.incrementsPage = 5;
 
         this._settings = settings;
+        this.ctlPath = null;
     }
 
     isAvailable() {
@@ -96,8 +97,6 @@ export const DellSmBiosSingleBattery = GObject.registerClass({
 
     async setThresholdLimitLibSmbios(chargingMode) {
         this._chargingMode = chargingMode;
-        this._ctlPath = this._settings.get_string('ctl-path');
-
         if (this._chargingMode !== 'adv' && this._chargingMode !== 'exp') {
             this._endValue = this._settings.get_int(`current-${this._chargingMode}-end-threshold`);
             this._startValue = this._settings.get_int(`current-${this._chargingMode}-start-threshold`);
@@ -117,7 +116,7 @@ export const DellSmBiosSingleBattery = GObject.registerClass({
             arg2 = `${this._startValue}`;
         }
 
-        await runCommandCtl(this._ctlPath, this._writeSmbiosCmd, arg1, arg2, null);
+        await runCommandCtl(this.ctlPath, this._writeSmbiosCmd, arg1, arg2, null);
         verified = await this._verifySmbiosThreshold();
         if (verified)
             return 0;
@@ -126,7 +125,7 @@ export const DellSmBiosSingleBattery = GObject.registerClass({
     }
 
     async _verifySmbiosThreshold() {
-        const [, output] = await runCommandCtl(this._ctlPath, this._readSmbiosCmd, null, null, null);
+        const [, output] = await runCommandCtl(this.ctlPath, this._readSmbiosCmd, null, null, null);
         const filteredOutput = output.trim().replace('(', '').replace(')', '').replace(',', '').replace(/:/g, '');
         const splitOutput = filteredOutput.split('\n');
         const firstLine = splitOutput[0].split(' ');
@@ -156,7 +155,6 @@ export const DellSmBiosSingleBattery = GObject.registerClass({
 
     async setThresholdLimitCctk(chargingMode) {
         this._chargingMode = chargingMode;
-        this._ctlPath = this._settings.get_string('ctl-path');
 
         if (this._chargingMode !== 'adv' && this._chargingMode !== 'exp') {
             this._endValue = this._settings.get_int(`current-${this._chargingMode}-end-threshold`);
@@ -203,7 +201,7 @@ export const DellSmBiosSingleBattery = GObject.registerClass({
 
     async _writeCctkThreshold(arg3) {
         const cmd = arg3 ? this._writeCctkPassCmd : this._writeCctkCmd;
-        const [status] = await runCommandCtl(this._ctlPath, cmd, this._arg1, this._arg2, arg3);
+        const [status] = await runCommandCtl(this.ctlPath, cmd, this._arg1, this._arg2, arg3);
         if (status === 65 || status === 58) {
             this.emit('threshold-applied', 'password-required');
             return 0;
@@ -216,7 +214,7 @@ export const DellSmBiosSingleBattery = GObject.registerClass({
     }
 
     async _verifyCctkThreshold() {
-        const [, output] = await runCommandCtl(this._ctlPath, this._readCctkCmd, null, null, null);
+        const [, output] = await runCommandCtl(this.ctlPath, this._readCctkCmd, null, null, null);
         const filteredOutput = output.trim().replace('=', ' ').replace(':', ' ').replace('-', ' ');
         const splitOutput = filteredOutput.split(' ');
         if (splitOutput[0] === 'PrimaryBattChargeCfg') {

@@ -25,6 +25,7 @@ export const PanasonicSingleBattery = GObject.registerClass({
         this.deviceUsesModeNotValue = true;
 
         this._settings = settings;
+        this.ctlPath = null;
     }
 
     isAvailable() {
@@ -36,7 +37,6 @@ export const PanasonicSingleBattery = GObject.registerClass({
 
     async setThresholdLimit(chargingMode) {
         this._status = 0;
-        const ctlPath = this._settings.get_string('ctl-path');
         this._chargingMode = chargingMode;
         if (this._chargingMode === 'ful')
             this._ecoMode = 0;
@@ -44,7 +44,7 @@ export const PanasonicSingleBattery = GObject.registerClass({
             this._ecoMode = 1;
         if (this._verifyThreshold())
             return this._status;
-        [this._status] = await runCommandCtl(ctlPath, 'PANASONIC', `${this._ecoMode}`, null, null);
+        [this._status] = await runCommandCtl(this.ctlPath, 'PANASONIC', `${this._ecoMode}`, null, null);
         if (this._status === 0) {
             if (this._verifyThreshold())
                 return this._status;

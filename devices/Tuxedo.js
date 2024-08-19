@@ -29,6 +29,7 @@ export const Tuxedo3ModesSingleBattery = GObject.registerClass({
         this.iconForMaxLifeMode = '080';
 
         this._settings = settings;
+        this.ctlPath = null;
     }
 
     isAvailable() {
@@ -44,7 +45,6 @@ export const Tuxedo3ModesSingleBattery = GObject.registerClass({
 
     async setThresholdLimit(chargingMode) {
         this._status = 0;
-        const ctlPath = this._settings.get_string('ctl-path');
         this._chargingMode = chargingMode;
         if (this._chargingMode === 'ful') {
             this._profile = 'high_capacity';
@@ -58,7 +58,7 @@ export const Tuxedo3ModesSingleBattery = GObject.registerClass({
         }
         if (this._verifyThreshold())
             return this._status;
-        [this._status] = await runCommandCtl(ctlPath, 'TUXEDO', this._profile, null, null);
+        [this._status] = await runCommandCtl(this.ctlPath, 'TUXEDO', this._profile, null, null);
         if (this._status === 0) {
             if (this._verifyThreshold())
                 return this._status;

@@ -29,6 +29,7 @@ export const SonySingleBattery = GObject.registerClass({
         this.iconForMaxLifeMode = '050';
 
         this._settings = settings;
+        this.ctlPath = null;
     }
 
     isAvailable() {
@@ -43,7 +44,6 @@ export const SonySingleBattery = GObject.registerClass({
         this._status = 0;
         this._updateHighSpeedCharging = false;
         let highSpeedCharging = 'unsupported';
-        const ctlPath = this._settings.get_string('ctl-path');
         this._chargingMode = chargingMode;
         if (this._chargingMode === 'ful') {
             this._batteryCareLimiter = 0;
@@ -66,7 +66,7 @@ export const SonySingleBattery = GObject.registerClass({
             else if (this._highSpeedCharging === 0)
                 highSpeedCharging = 'off';
         }
-        [this._status] = await runCommandCtl(ctlPath, 'SONY', `${this._batteryCareLimiter}`, highSpeedCharging, null);
+        [this._status] = await runCommandCtl(this.ctlPath, 'SONY', `${this._batteryCareLimiter}`, highSpeedCharging, null);
         if (this._status === 0) {
             if (this._verifyThreshold()) {
                 this._updateHighSpeedCharging = false;

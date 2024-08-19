@@ -45,6 +45,7 @@ export const LibremSingleBatteryBAT0 = GObject.registerClass({
         this.incrementsPage = 5;
 
         this._settings = settings;
+        this.ctlPath = null;
     }
 
     isAvailable() {
@@ -59,16 +60,15 @@ export const LibremSingleBatteryBAT0 = GObject.registerClass({
 
     async setThresholdLimit(chargingMode) {
         this._status = 0;
-        const ctlPath = this._settings.get_string('ctl-path');
         this._endValue = this._settings.get_int(`current-${chargingMode}-end-threshold`);
         this._startValue = this._settings.get_int(`current-${chargingMode}-start-threshold`);
         if (this._verifyThreshold())
             return this._status;
         // Some device wont update end threshold if start threshold > end threshold
         if (this._startValue >= this._oldEndValue)
-            [this._status] = await runCommandCtl(ctlPath, 'BAT0_END_START', `${this._endValue}`, `${this._startValue}`, null);
+            [this._status] = await runCommandCtl(this.ctlPath, 'BAT0_END_START', `${this._endValue}`, `${this._startValue}`, null);
         else
-            [this._status] = await runCommandCtl(ctlPath, 'BAT0_START_END', `${this._endValue}`, `${this._startValue}`, null);
+            [this._status] = await runCommandCtl(this.ctlPath, 'BAT0_START_END', `${this._endValue}`, `${this._startValue}`, null);
 
         if (this._status === 0) {
             if (this._verifyThreshold())

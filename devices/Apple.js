@@ -37,6 +37,7 @@ export const AppleSingleBattery = GObject.registerClass({
         this.incrementsPage = 5;
 
         this._settings = settings;
+        this.ctlPath = null;
     }
 
     isAvailable() {
@@ -58,7 +59,6 @@ export const AppleSingleBattery = GObject.registerClass({
     async setThresholdLimit(chargingMode) {
         let chargingLedValue;
         this._status = 0;
-        const ctlPath = this._settings.get_string('ctl-path');
         this._endValue = this._settings.get_int(`current-${chargingMode}-end-threshold`);
         if (!this._chargingLedStatusChanged && this._verifyThreshold())
             return this._status;
@@ -76,7 +76,7 @@ export const AppleSingleBattery = GObject.registerClass({
             chargingLedValue = 0;
         }
 
-        [this._status] = await runCommandCtl(ctlPath, 'APPLE', `${this._endValue}`, `${chargingLedValue}`, null);
+        [this._status] = await runCommandCtl(this.ctlPath, 'APPLE', `${this._endValue}`, `${chargingLedValue}`, null);
         if (this._status === 0) {
             if (this._verifyThreshold())
                 return this._status;

@@ -27,6 +27,7 @@ export const LgSingleBattery = GObject.registerClass({
         this.iconForMaxLifeMode = '080';
 
         this._settings = settings;
+        this.ctlPath = null;
     }
 
     isAvailable() {
@@ -37,14 +38,13 @@ export const LgSingleBattery = GObject.registerClass({
 
     async setThresholdLimit(chargingMode) {
         this._status = 0;
-        const ctlPath = this._settings.get_string('ctl-path');
         if (chargingMode === 'ful')
             this._batteryCareLimit = 100;
         else if (chargingMode === 'max')
             this._batteryCareLimit = 80;
         if (this._verifyThreshold())
             return this._status;
-        [this._status] = await runCommandCtl(ctlPath, 'LG', `${this._batteryCareLimit}`, null, null);
+        [this._status] = await runCommandCtl(this.ctlPath, 'LG', `${this._batteryCareLimit}`, null, null);
         if (this._status === 0) {
             if (this._verifyThreshold())
                 return this._status;

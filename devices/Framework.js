@@ -39,6 +39,7 @@ export const FrameworkSingleBatteryBAT1 = GObject.registerClass({
         this.incrementsPage = 5;
 
         this._settings = settings;
+        this.ctlPath = null;
     }
 
     isAvailable() {
@@ -61,7 +62,6 @@ export const FrameworkSingleBatteryBAT1 = GObject.registerClass({
 
     async setThresholdLimit(chargingMode) {
         let status = 0;
-        this._ctlPath = this._settings.get_string('ctl-path');
         this._endValue = this._settings.get_int(`current-${chargingMode}-end-threshold`);
 
         if (this._hasSysfsNode && this._hasFrameworkTool) {
@@ -82,7 +82,8 @@ export const FrameworkSingleBatteryBAT1 = GObject.registerClass({
         this._status = 0;
         if (this._verifyThreshold())
             return this._status;
-        [this._status] = await runCommandCtl(this._ctlPath, 'BAT1_END', `${this._endValue}`, null, null);
+
+        [this._status] = await runCommandCtl(this.ctlPath, 'BAT1_END', `${this._endValue}`, null, null);
         if (this._status === 0) {
             if (this._verifyThreshold())
                 return this._status;
@@ -118,11 +119,11 @@ export const FrameworkSingleBatteryBAT1 = GObject.registerClass({
     }
 
     async _setThresholdFrameworkTool() {
-        let output = await runCommandCtl(this._ctlPath, 'FRAMEWORK_TOOL_THRESHOLD_READ', this._frameworkToolDriver, null, null);
+        let output = await runCommandCtl(this.ctlPath, 'FRAMEWORK_TOOL_THRESHOLD_READ', this._frameworkToolDriver, null, null);
         if (this._verifyFrameworkToolThreshold(output))
             return 0;
 
-        output = await runCommandCtl(this._ctlPath, 'FRAMEWORK_TOOL_THRESHOLD_WRITE', this._frameworkToolDriver, `${this._endValue}`, null);
+        output = await runCommandCtl(this.ctlPath, 'FRAMEWORK_TOOL_THRESHOLD_WRITE', this._frameworkToolDriver, `${this._endValue}`, null);
         if (this._verifyFrameworkToolThreshold(output))
             return 0;
 

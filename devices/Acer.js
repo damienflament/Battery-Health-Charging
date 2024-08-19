@@ -27,6 +27,7 @@ export const AcerSingleBattery = GObject.registerClass({
         this.iconForMaxLifeMode = '080';
 
         this._settings = settings;
+        this.ctlPath = null;
     }
 
     isAvailable() {
@@ -37,7 +38,6 @@ export const AcerSingleBattery = GObject.registerClass({
 
     async setThresholdLimit(chargingMode) {
         this._status = 0;
-        const ctlPath = this._settings.get_string('ctl-path');
         this._chargingMode = chargingMode;
         if (this._chargingMode === 'ful')
             this._healthMode = 0;
@@ -45,7 +45,7 @@ export const AcerSingleBattery = GObject.registerClass({
             this._healthMode = 1;
         if (this._verifyThreshold())
             return this._status;
-        [this._status] = await runCommandCtl(ctlPath, 'ACER', `${this._healthMode}`, null, null);
+        [this._status] = await runCommandCtl(this.ctlPath, 'ACER', `${this._healthMode}`, null, null);
         if (this._status === 0) {
             if (this._verifyThreshold())
                 return this._status;

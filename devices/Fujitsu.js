@@ -38,6 +38,7 @@ export const FujitsuSingleBatteryCMB0 = GObject.registerClass({
         this.incrementsPage = 5;
 
         this._settings = settings;
+        this.ctlPath = null;
     }
 
     isAvailable() {
@@ -50,9 +51,8 @@ export const FujitsuSingleBatteryCMB0 = GObject.registerClass({
 
     async setThresholdLimit(chargingMode) {
         this._status = 0;
-        const ctlPath = this._settings.get_string('ctl-path');
         this._endValue = this._settings.get_int(`current-${chargingMode}-end-threshold`);
-        [this._status] = await runCommandCtl(ctlPath, 'CMB0_END', `${this._endValue}`, null, null);
+        [this._status] = await runCommandCtl(this.ctlPath, 'CMB0_END', `${this._endValue}`, null, null);
         if (this._status === 0) {
             if (this._verifyThreshold())
                 return this._status;
@@ -122,6 +122,7 @@ export const FujitsuSingleBatteryCMB1 = GObject.registerClass({
         this.incrementsPage = 5;
 
         this._settings = settings;
+        this.ctlPath = null;
     }
 
     isAvailable() {
@@ -134,9 +135,8 @@ export const FujitsuSingleBatteryCMB1 = GObject.registerClass({
 
     async setThresholdLimit(chargingMode) {
         this._status = 0;
-        const ctlPath = this._settings.get_string('ctl-path');
         this._endValue = this._settings.get_int(`current-${chargingMode}-end-threshold`);
-        [this._status] = await runCommandCtl(ctlPath, 'CMB1_END', `${this._endValue}`, null, null);
+        [this._status] = await runCommandCtl(this.ctlPath, 'CMB1_END', `${this._endValue}`, null, null);
         if (this._status === 0) {
             if (this._verifyThreshold())
                 return this._status;

@@ -33,6 +33,7 @@ export const  RazerSingleBattery = GObject.registerClass({
         this.incrementsPage = 10;
 
         this._settings = settings;
+        this.ctlPath = null;
     }
 
     isAvailable() {

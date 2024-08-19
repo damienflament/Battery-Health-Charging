@@ -43,6 +43,7 @@ export const HuaweiSingleBattery = GObject.registerClass({
         this.incrementsPage = 5;
 
         this._settings = settings;
+        this.ctlPath = null;
     }
 
     isAvailable() {
@@ -54,14 +55,13 @@ export const HuaweiSingleBattery = GObject.registerClass({
     async setThresholdLimit(chargingMode) {
         this._status = 0;
         this._limitValue = ['0', '0'];
-        const ctlPath = this._settings.get_string('ctl-path');
         this._endValue = this._settings.get_int(`current-${chargingMode}-end-threshold`);
         this._startValue = this._settings.get_int(`current-${chargingMode}-start-threshold`);
         if (this._status === 0) {
             if (this._verifyThreshold())
                 return this._status;
         }
-        [this._status] = await runCommandCtl(ctlPath, 'HUAWEI', `${this._endValue}`, `${this._startValue}`, null);
+        [this._status] = await runCommandCtl(this.ctlPath, 'HUAWEI', `${this._endValue}`, `${this._startValue}`, null);
         if (this._status === 0) {
             if (this._verifyThreshold())
                 return this._status;

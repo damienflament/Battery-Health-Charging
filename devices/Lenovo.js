@@ -25,6 +25,7 @@ export const LenovoSingleBattery = GObject.registerClass({
         this.deviceUsesModeNotValue = true;
 
         this._settings = settings;
+        this.ctlPath = null;
     }
 
     isAvailable() {
@@ -36,7 +37,6 @@ export const LenovoSingleBattery = GObject.registerClass({
 
     async setThresholdLimit(chargingMode) {
         this._status = 0;
-        const ctlPath = this._settings.get_string('ctl-path');
         this._chargingMode = chargingMode;
         if (this._chargingMode === 'ful')
             this._conservationMode = 0;
@@ -44,7 +44,7 @@ export const LenovoSingleBattery = GObject.registerClass({
             this._conservationMode = 1;
         if (this._verifyThreshold())
             return this._status;
-        [this._status] = await runCommandCtl(ctlPath, 'LENOVO', `${this._conservationMode}`, null, null);
+        [this._status] = await runCommandCtl(this.ctlPath, 'LENOVO', `${this._conservationMode}`, null, null);
         if (this._status === 0) {
             if (this._verifyThreshold())
                 return this._status;

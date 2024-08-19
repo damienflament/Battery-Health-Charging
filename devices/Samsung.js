@@ -25,6 +25,7 @@ export const SamsungSingleBattery = GObject.registerClass({
         this.deviceUsesModeNotValue = true;
 
         this._settings = settings;
+        this.ctlPath = null;
     }
 
     isAvailable() {
@@ -36,7 +37,6 @@ export const SamsungSingleBattery = GObject.registerClass({
 
     async setThresholdLimit(chargingMode) {
         this._status = 0;
-        const ctlPath = this._settings.get_string('ctl-path');
         this._chargingMode = chargingMode;
         if (this._chargingMode === 'ful')
             this._batteryLifeExtender = 0;
@@ -44,7 +44,7 @@ export const SamsungSingleBattery = GObject.registerClass({
             this._batteryLifeExtender = 1;
         if (this._verifyThreshold())
             return this._status;
-        [this._status] = await runCommandCtl(ctlPath, 'SAMSUNG', `${this._batteryLifeExtender}`, null, null);
+        [this._status] = await runCommandCtl(this.ctlPath, 'SAMSUNG', `${this._batteryLifeExtender}`, null, null);
         if (this._status === 0) {
             if (this._verifyThreshold())
                 return this._status;

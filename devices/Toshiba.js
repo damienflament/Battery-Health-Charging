@@ -38,6 +38,7 @@ export const ToshibaSingleBatteryBAT0 = GObject.registerClass({
         this.dischargeBeforeSet = 80;
 
         this._settings = settings;
+        this.ctlPath = null;
     }
 
     isAvailable() {
@@ -50,13 +51,12 @@ export const ToshibaSingleBatteryBAT0 = GObject.registerClass({
     }
 
     async setThresholdLimit(chargingMode) {
-        const ctlPath = this._settings.get_string('ctl-path');
         let endValue;
         if (chargingMode === 'ful')
             endValue = 100;
         else if (chargingMode === 'max')
             endValue = 80;
-        const [status] = await runCommandCtl(ctlPath, 'BAT0_END', `${endValue}`, null, null);
+        const [status] = await runCommandCtl(this.ctlPath, 'BAT0_END', `${endValue}`, null, null);
         if (status === 0) {
             this.endLimitValue = endValue;
             this.emit('threshold-applied', 'success');
@@ -119,6 +119,7 @@ export const ToshibaSingleBatteryBAT1 = GObject.registerClass({
         this.dischargeBeforeSet = 80;
 
         this._settings = settings;
+        this.ctlPath = null;
     }
 
     isAvailable() {
@@ -131,13 +132,12 @@ export const ToshibaSingleBatteryBAT1 = GObject.registerClass({
     }
 
     async setThresholdLimit(chargingMode) {
-        const ctlPath = this._settings.get_string('ctl-path');
         let endValue;
         if (chargingMode === 'ful')
             endValue = 100;
         else if (chargingMode === 'max')
             endValue = 80;
-        const [status] = await runCommandCtl(ctlPath, 'BAT1_END', `${endValue}`, null, null);
+        const [status] = await runCommandCtl(this.ctlPath, 'BAT1_END', `${endValue}`, null, null);
         if (status === 0) {
             this.endLimitValue = endValue;
             this.emit('threshold-applied', 'success');

@@ -45,6 +45,7 @@ export const AsahiSingleBattery62 = GObject.registerClass({
         this.incrementsPage = 5;
 
         this._settings = settings;
+        this.ctlPath = null;
     }
 
     isAvailable() {
@@ -60,12 +61,11 @@ export const AsahiSingleBattery62 = GObject.registerClass({
 
     async setThresholdLimit(chargingMode) {
         this._status = 0;
-        const ctlPath = this._settings.get_string('ctl-path');
         this._endValue = this._settings.get_int(`current-${chargingMode}-end-threshold`);
         this._startValue = this._settings.get_int(`current-${chargingMode}-start-threshold`);
         if (this._verifyThreshold())
             return this._status;
-        [this._status] = await runCommandCtl(ctlPath, 'ASAHI_END_START', `${this._endValue}`, `${this._startValue}`, null);
+        [this._status] = await runCommandCtl(this.ctlPath, 'ASAHI_END_START', `${this._endValue}`, `${this._startValue}`, null);
         if (this._status === 0) {
             if (this._verifyThreshold())
                 return this._status;
@@ -127,6 +127,7 @@ export const AsahiSingleBattery63 = GObject.registerClass({
         this.iconForMaxLifeMode = '080';
 
         this._settings = settings;
+        this.ctlPath = null;
     }
 
     isAvailable() {
@@ -142,7 +143,6 @@ export const AsahiSingleBattery63 = GObject.registerClass({
 
     async setThresholdLimit(chargingMode) {
         this._status = 0;
-        const ctlPath = this._settings.get_string('ctl-path');
         if (chargingMode === 'ful') {
             this._endValue = 100;
             this._startValue = 100;
@@ -152,7 +152,7 @@ export const AsahiSingleBattery63 = GObject.registerClass({
         }
         if (this._verifyThreshold())
             return this._status;
-        [this._status] = await runCommandCtl(ctlPath, 'ASAHI_END_START', `${this._endValue}`, `${this._startValue}`, null);
+        [this._status] = await runCommandCtl(this.ctlPath, 'ASAHI_END_START', `${this._endValue}`, `${this._startValue}`, null);
         if (this._status === 0) {
             if (this._verifyThreshold())
                 return this._status;

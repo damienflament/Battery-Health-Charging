@@ -8,10 +8,6 @@
             <default>0</default>
             <summary>Type fo device found during init</summary>
         </key>
-        <key name="ctl-path" type="s">
-            <default>""</default>
-            <summary>Path of ctl</summary>
-        </key>
 
         <!-- General settings -->
 
