@@ -51,10 +51,6 @@ export const FrameworkSingleBatteryBAT1 = GObject.registerClass({
 
         this._settings.set_boolean('detected-framework-sysfs', this._hasSysfsNode);
         this._settings.set_boolean('detected-framework-tool', this._hasFrameworkTool);
-
-        if (this._hasFrameworkTool)
-            this._frameworkToolDriver = fileExists(CROS_EC_PATH) ? 'cros-ec' : 'portio';
-
         return true;
     }
 
@@ -117,7 +113,8 @@ export const FrameworkSingleBatteryBAT1 = GObject.registerClass({
     }
 
     async _setThresholdFrameworkTool() {
-        let [status, output] = await runCommandCtl(this.ctlPath, 'FRAMEWORK_TOOL_THRESHOLD_READ', this._frameworkToolDriver, null, null);
+        const frameworkToolDriver = fileExists(CROS_EC_PATH) ? 'cros-ec' : 'portio';
+        let [status, output] = await runCommandCtl(this.ctlPath, 'FRAMEWORK_TOOL_THRESHOLD_READ', frameworkToolDriver, null, null);
         if (status === exitCode.ERROR) {
             this.emit('threshold-applied', 'failed');
             return exitCode.ERROR;
@@ -126,7 +123,7 @@ export const FrameworkSingleBatteryBAT1 = GObject.registerClass({
         if (this._verifyFrameworkToolThreshold(output))
             return exitCode.SUCCESS;
 
-        [status, output] = await runCommandCtl(this.ctlPath, 'FRAMEWORK_TOOL_THRESHOLD_WRITE', this._frameworkToolDriver, `${this._endValue}`, null);
+        [status, output] = await runCommandCtl(this.ctlPath, 'FRAMEWORK_TOOL_THRESHOLD_WRITE', frameworkToolDriver, `${this._endValue}`, null);
         if (status === exitCode.ERROR) {
             this.emit('threshold-applied', 'failed');
             return exitCode.ERROR;
@@ -140,10 +137,9 @@ export const FrameworkSingleBatteryBAT1 = GObject.registerClass({
     }
 
     _verifyFrameworkToolThreshold(output) {
-        let endValue;
         const matchOutput = output.trim().match(/Minimum 0%, Maximum (\d+)%/);
         if (matchOutput) {
-            endValue = parseInt(matchOutput[1]);
+            const endValue = parseInt(matchOutput[1]);
             if (!isNaN(endValue) && endValue > 0 && endValue <= 100 && this._endValue ===  endValue) {
                 this.endLimitValue = this._endValue;
                 this.emit('threshold-applied', 'success');
