@@ -4,7 +4,7 @@ import GLib from 'gi://GLib';
 import GObject from 'gi://GObject';
 import * as Helper from '../lib/helper.js';
 
-const {fileExists, readFileInt, runCommandCtl} = Helper;
+const {exitCode, fileExists, readFileInt, runCommandCtl} = Helper;
 
 const LG_PATH = '/sys/devices/platform/lg-laptop/battery_care_limit';
 
@@ -37,29 +37,39 @@ export const LgSingleBattery = GObject.registerClass({
     }
 
     async setThresholdLimit(chargingMode) {
-        this._status = 0;
         if (chargingMode === 'ful')
             this._batteryCareLimit = 100;
         else if (chargingMode === 'max')
             this._batteryCareLimit = 80;
+
         if (this._verifyThreshold())
-            return this._status;
-        [this._status] = await runCommandCtl(this.ctlPath, 'LG', `${this._batteryCareLimit}`, null, null);
-        if (this._status === 0) {
-            if (this._verifyThreshold())
-                return this._status;
+            return exitCode.SUCCESS;
+
+        const [status] = await runCommandCtl(this.ctlPath, 'LG', `${this._batteryCareLimit}`, null, null);
+        if (status === exitCode.ERROR) {
+            this.emit('threshold-applied', 'failed');
+            return exitCode.ERROR;
         }
+
+        if (this._verifyThreshold())
+            return exitCode.SUCCESS;
 
         if (this._delayReadTimeoutId)
             GLib.source_remove(this._delayReadTimeoutId);
         this._delayReadTimeoutId = null;
 
-        this._delayReadTimeoutId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 200, () => {
-            this._reVerifyThreshold();
-            this._delayReadTimeoutId = null;
-            return GLib.SOURCE_REMOVE;
+        await new Promise(resolve => {
+            this._delayReadTimeoutId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 200, () => {
+                resolve();
+                return GLib.SOURCE_REMOVE;
+            });
         });
-        return this._status;
+
+        if (this._verifyThreshold())
+            return exitCode.SUCCESS;
+
+        this.emit('threshold-applied', 'failed');
+        return exitCode.ERROR;
     }
 
     _verifyThreshold() {
@@ -69,14 +79,6 @@ export const LgSingleBattery = GObject.registerClass({
             return true;
         }
         return false;
-    }
-
-    _reVerifyThreshold() {
-        if (this._status === 0) {
-            if (this._verifyThreshold())
-                return;
-        }
-        this.emit('threshold-applied', 'failed');
     }
 
     destroy() {
