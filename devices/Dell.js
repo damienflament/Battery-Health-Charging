@@ -6,7 +6,7 @@ import GObject from 'gi://GObject';
 import Secret from 'gi://Secret';
 import * as Helper from '../lib/helper.js';
 
-const {fileExists, runCommandCtl} = Helper;
+const {exitCode, fileExists, runCommandCtl} = Helper;
 
 const DELL_PATH = '/sys/devices/platform/dell-laptop';
 const SMBIOS_PATH = '/usr/sbin/smbios-battery-ctl';
@@ -55,14 +55,14 @@ export const DellSmBiosSingleBattery = GObject.registerClass({
             return false;
         let smbiosUsesAbsolutePath = false;
         let cctkUsesRelativePath = false;
-        this._usesLibSmbios = GLib.find_program_in_path('smbios-battery-ctl') ? true : false;
+        this._usesLibSmbios = !!GLib.find_program_in_path('smbios-battery-ctl');
         if (!this._usesLibSmbios) {
             this._usesLibSmbios = fileExists(SMBIOS_PATH);
             smbiosUsesAbsolutePath = this._usesLibSmbios;
         }
         this._usesCctk = fileExists(CCTK_PATH);
         if (!this._usesCctk) {
-            this._usesCctk = GLib.find_program_in_path('cctk') ? true : false;
+            this._usesCctk = !!GLib.find_program_in_path('cctk');
             cctkUsesRelativePath = this._usesCctk;
         }
         if (!this._usesCctk && !this._usesLibSmbios)
@@ -80,7 +80,7 @@ export const DellSmBiosSingleBattery = GObject.registerClass({
     }
 
     async setThresholdLimit(chargingMode) {
-        let status = 0;
+        let status;
         if (this._usesCctk && this._usesLibSmbios) {
             const dellPackage = this._settings.get_int('dell-package-type');
             if (dellPackage === 0)
@@ -105,7 +105,7 @@ export const DellSmBiosSingleBattery = GObject.registerClass({
         }
         let verified = await this._verifySmbiosThreshold();
         if (verified)
-            return 0;
+            return exitCode.SUCCESS;
 
         let arg1, arg2;
         if (this._chargingMode === 'adv' || this._chargingMode === 'exp') {
@@ -119,9 +119,9 @@ export const DellSmBiosSingleBattery = GObject.registerClass({
         await runCommandCtl(this.ctlPath, this._writeSmbiosCmd, arg1, arg2, null);
         verified = await this._verifySmbiosThreshold();
         if (verified)
-            return 0;
+            return exitCode.SUCCESS;
         this.emit('threshold-applied', 'failed');
-        return 1;
+        return exitCode.ERROR;
     }
 
     async _verifySmbiosThreshold() {
@@ -165,7 +165,7 @@ export const DellSmBiosSingleBattery = GObject.registerClass({
 
         const verified = await this._verifyCctkThreshold();
         if (verified)
-            return 0;
+            return exitCode.SUCCESS;
 
         if (this._chargingMode === 'adv' || this._chargingMode === 'exp') {
             this._arg1 = this._chargingMode;
@@ -180,7 +180,7 @@ export const DellSmBiosSingleBattery = GObject.registerClass({
         else
             await this._writeCctkThreshold(null);
 
-        return 0;
+        return exitCode.SUCCESS;
     }
 
     _writeCctkThresholdWithPassword() {
@@ -204,13 +204,13 @@ export const DellSmBiosSingleBattery = GObject.registerClass({
         const [status] = await runCommandCtl(this.ctlPath, cmd, this._arg1, this._arg2, arg3);
         if (status === 65 || status === 58) {
             this.emit('threshold-applied', 'password-required');
-            return 0;
+            return exitCode.SUCCESS;
         }
         const verified = await this._verifyCctkThreshold();
         if (verified)
-            return 0;
+            return exitCode.SUCCESS;
         this.emit('threshold-applied', 'failed');
-        return 1;
+        return exitCode.ERROR;
     }
 
     async _verifyCctkThreshold() {
