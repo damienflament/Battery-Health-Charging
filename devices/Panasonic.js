@@ -4,7 +4,7 @@ import GLib from 'gi://GLib';
 import GObject from 'gi://GObject';
 import * as Helper from '../lib/helper.js';
 
-const {fileExists, readFileInt, runCommandCtl} = Helper;
+const {exitCode, fileExists, readFileInt, runCommandCtl} = Helper;
 
 const PANASONIC_PATH = '/sys/devices/platform/panasonic/eco_mode';
 
@@ -36,29 +36,40 @@ export const PanasonicSingleBattery = GObject.registerClass({
     }
 
     async setThresholdLimit(chargingMode) {
-        this._status = 0;
         this._chargingMode = chargingMode;
         if (this._chargingMode === 'ful')
             this._ecoMode = 0;
         else if (this._chargingMode === 'max')
             this._ecoMode = 1;
+
         if (this._verifyThreshold())
-            return this._status;
-        [this._status] = await runCommandCtl(this.ctlPath, 'PANASONIC', `${this._ecoMode}`, null, null);
-        if (this._status === 0) {
-            if (this._verifyThreshold())
-                return this._status;
+            return exitCode.SUCCESS;
+
+        const [status] = await runCommandCtl(this.ctlPath, 'PANASONIC', `${this._ecoMode}`, null, null);
+        if (status === exitCode.ERROR) {
+            this.emit('threshold-applied', 'failed');
+            return exitCode.ERROR;
         }
+
+        if (this._verifyThreshold())
+            return exitCode.SUCCESS;
 
         if (this._delayReadTimeoutId)
             GLib.source_remove(this._delayReadTimeoutId);
         this._delayReadTimeoutId = null;
-        this._delayReadTimeoutId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 200, () => {
-            this._reVerifyThreshold();
-            this._delayReadTimeoutId = null;
-            return GLib.SOURCE_REMOVE;
+
+        await new Promise(resolve => {
+            this._delayReadTimeoutId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 200, () => {
+                resolve();
+                return GLib.SOURCE_REMOVE;
+            });
         });
-        return this._status;
+
+        if (this._verifyThreshold())
+            return exitCode.SUCCESS;
+
+        this.emit('threshold-applied', 'failed');
+        return exitCode.ERROR;
     }
 
     _verifyThreshold() {
@@ -68,14 +79,6 @@ export const PanasonicSingleBattery = GObject.registerClass({
             return true;
         }
         return false;
-    }
-
-    _reVerifyThreshold() {
-        if (this._status === 0) {
-            if (this._verifyThreshold())
-                return;
-        }
-        this.emit('threshold-applied', 'failed');
     }
 
     destroy() {
