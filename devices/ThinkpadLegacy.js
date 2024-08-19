@@ -5,7 +5,7 @@ import GLib from 'gi://GLib';
 import GObject from 'gi://GObject';
 import * as Helper from '../lib/helper.js';
 
-const {fileExists, readFileInt, runCommandCtl} = Helper;
+const {exitCode, fileExists, readFileInt, runCommandCtl} = Helper;
 
 const TP_BAT0_END = '/sys/devices/platform/smapi/BAT0/stop_charge_thresh';
 const TP_BAT0_START = '/sys/devices/platform/smapi/BAT0/start_charge_thresh';
@@ -76,7 +76,7 @@ export const ThinkpadLegacyDualBattery = GObject.registerClass({
 
     async setThresholdLimit(chargingMode) {
         if (this.battery0Removed)
-            return 0;
+            return exitCode.SUCCESS;
         let status;
         const endValue = this._settings.get_int(`current-${chargingMode}-end-threshold`);
         const startValue = this._settings.get_int(`current-${chargingMode}-start-threshold`);
@@ -86,28 +86,28 @@ export const ThinkpadLegacyDualBattery = GObject.registerClass({
             this.endLimitValue = endValue;
             this.startLimitValue = startValue;
             this.emit('threshold-applied', 'success');
-            return 0;
+            return exitCode.SUCCESS;
         }
         // Some device wont update end threshold if start threshold > end threshold
         if (startValue >= oldEndValue)
             [status] = await runCommandCtl(this.ctlPath, 'TP_BAT0_END_START', `${endValue}`, `${startValue}`, null);
         else
             [status] = await runCommandCtl(this.ctlPath, 'TP_BAT0_START_END', `${endValue}`, `${startValue}`, null);
-        if (status === 0) {
+        if (status === exitCode.SUCCESS) {
             this.endLimitValue = readFileInt(TP_BAT0_END);
             this.startLimitValue = readFileInt(TP_BAT0_START);
             if ((endValue === this.endLimitValue) && (startValue === this.startLimitValue)) {
                 this.emit('threshold-applied', 'success');
-                return 0;
+                return exitCode.SUCCESS;
             }
         }
         this.emit('threshold-applied', 'failed');
-        return 1;
+        return exitCode.ERROR;
     }
 
     async setThresholdLimit2(chargingMode2) {
         if (this.battery1Removed)
-            return 0;
+            return exitCode.SUCCESS;
         let status;
         const endValue = this._settings.get_int(`current-${chargingMode2}-end-threshold2`);
         const startValue = this._settings.get_int(`current-${chargingMode2}-start-threshold2`);
@@ -117,27 +117,27 @@ export const ThinkpadLegacyDualBattery = GObject.registerClass({
             this.endLimit2Value = endValue;
             this.startLimit2Value = startValue;
             this.emit('threshold-applied', 'success');
-            return 0;
+            return exitCode.SUCCESS;
         }
         // Some device wont update end threshold if start threshold > end threshold
         if (startValue >= oldEndValue)
             [status] = await runCommandCtl(this.ctlPath, 'TP_BAT1_END_START', `${endValue}`, `${startValue}`, null);
         else
             [status] = await runCommandCtl(this.ctlPath, 'TP_BAT1_START_END', `${endValue}`, `${startValue}`, null);
-        if (status === 0) {
+        if (status === exitCode.SUCCESS) {
             this.endLimit2Value = readFileInt(TP_BAT1_END);
             this.startLimit2Value = readFileInt(TP_BAT1_START);
             if ((endValue === this.endLimit2Value) && (startValue === this.startLimit2Value)) {
                 this.emit('threshold-applied', 'success');
-                return 0;
+                return exitCode.SUCCESS;
             }
         }
-        return 1;
+        return exitCode.ERROR;
     }
 
     async setThresholdLimitDual() {
         let status = await this.setThresholdLimit(this._settings.get_string('charging-mode'));
-        if (status === 0)
+        if (status === exitCode.SUCCESS)
             status = await this.setThresholdLimit2(this._settings.get_string('charging-mode2'));
         return status;
     }
@@ -156,7 +156,6 @@ export const ThinkpadLegacyDualBattery = GObject.registerClass({
                 this.emit('battery-status-changed');
             }
         });
-
 
         this._battery1LevelPath = Gio.File.new_for_path(TP_BAT1_END);
         this._monitorLevel2 = this._battery1LevelPath.monitor_file(Gio.FileMonitorFlags.NONE, null);
@@ -241,32 +240,43 @@ export const ThinkpadLegacySingleBatteryBAT0 = GObject.registerClass({
     }
 
     async setThresholdLimit(chargingMode) {
-        this._status = 0;
+        let status;
         this._endValue = this._settings.get_int(`current-${chargingMode}-end-threshold`);
         this._startValue = this._settings.get_int(`current-${chargingMode}-start-threshold`);
+
         if (this._verifyThreshold())
-            return this._status;
+            return exitCode.SUCCESS;
+
         // Some device wont update end threshold if start threshold > end threshold
         if (this._startValue >= this._oldEndValue)
-            [this._status] = await runCommandCtl(this.ctlPath, 'TP_BAT0_END_START', `${this._endValue}`, `${this._startValue}`, null);
+            [status] = await runCommandCtl(this.ctlPath, 'TP_BAT0_END_START', `${this._endValue}`, `${this._startValue}`, null);
         else
-            [this._status] = await runCommandCtl(this.ctlPath, 'TP_BAT0_START_END', `${this._endValue}`, `${this._startValue}`, null);
+            [status] = await runCommandCtl(this.ctlPath, 'TP_BAT0_START_END', `${this._endValue}`, `${this._startValue}`, null);
 
-        if (this._status === 0) {
-            if (this._verifyThreshold())
-                return this._status;
+        if (status === exitCode.ERROR) {
+            this.emit('threshold-applied', 'failed');
+            return exitCode.ERROR;
         }
+
+        if (this._verifyThreshold())
+            return exitCode.SUCCESS;
 
         if (this._delayReadTimeoutId)
             GLib.source_remove(this._delayReadTimeoutId);
         this._delayReadTimeoutId = null;
 
-        this._delayReadTimeoutId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 200, () => {
-            this._reVerifyThreshold();
-            this._delayReadTimeoutId = null;
-            return GLib.SOURCE_REMOVE;
+        await new Promise(resolve => {
+            this._delayReadTimeoutId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 200, () => {
+                resolve();
+                return GLib.SOURCE_REMOVE;
+            });
         });
-        return this._status;
+
+        if (this._verifyThreshold())
+            return exitCode.SUCCESS;
+
+        this.emit('threshold-applied', 'failed');
+        return exitCode.ERROR;
     }
 
     _verifyThreshold() {
@@ -279,14 +289,6 @@ export const ThinkpadLegacySingleBatteryBAT0 = GObject.registerClass({
             return true;
         }
         return false;
-    }
-
-    _reVerifyThreshold() {
-        if (this._status === 0) {
-            if (this._verifyThreshold())
-                return;
-        }
-        this.emit('threshold-applied', 'failed');
     }
 
     destroy() {
@@ -345,32 +347,43 @@ export const ThinkpadLegacySingleBatteryBAT1 = GObject.registerClass({
     }
 
     async setThresholdLimit(chargingMode) {
-        this._status = 0;
+        let status;
         this._endValue = this._settings.get_int(`current-${chargingMode}-end-threshold`);
         this._startValue = this._settings.get_int(`current-${chargingMode}-start-threshold`);
+
         if (this._verifyThreshold())
-            return this._status;
+            return exitCode.SUCCESS;
+
         // Some device wont update end threshold if start threshold > end threshold
         if (this._startValue >= this._oldEndValue)
-            [this._status] = await runCommandCtl(this.ctlPath, 'TP_BAT1_END_START', `${this._endValue}`, `${this._startValue}`, null);
+            [status] = await runCommandCtl(this.ctlPath, 'TP_BAT1_END_START', `${this._endValue}`, `${this._startValue}`, null);
         else
-            [this._status] = await runCommandCtl(this.ctlPath, 'TP_BAT1_START_END', `${this._endValue}`, `${this._startValue}`, null);
+            [status] = await runCommandCtl(this.ctlPath, 'TP_BAT1_START_END', `${this._endValue}`, `${this._startValue}`, null);
 
-        if (this._status === 0) {
-            if (this._verifyThreshold())
-                return this._status;
+        if (status === exitCode.ERROR) {
+            this.emit('threshold-applied', 'failed');
+            return exitCode.ERROR;
         }
+
+        if (this._verifyThreshold())
+            return exitCode.SUCCESS;
 
         if (this._delayReadTimeoutId)
             GLib.source_remove(this._delayReadTimeoutId);
         this._delayReadTimeoutId = null;
 
-        this._delayReadTimeoutId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 200, () => {
-            this._reVerifyThreshold();
-            this._delayReadTimeoutId = null;
-            return GLib.SOURCE_REMOVE;
+        await new Promise(resolve => {
+            this._delayReadTimeoutId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 200, () => {
+                resolve();
+                return GLib.SOURCE_REMOVE;
+            });
         });
-        return this._status;
+
+        if (this._verifyThreshold())
+            return exitCode.SUCCESS;
+
+        this.emit('threshold-applied', 'failed');
+        return exitCode.ERROR;
     }
 
     _verifyThreshold() {
@@ -383,14 +396,6 @@ export const ThinkpadLegacySingleBatteryBAT1 = GObject.registerClass({
             return true;
         }
         return false;
-    }
-
-    _reVerifyThreshold() {
-        if (this._status === 0) {
-            if (this._verifyThreshold())
-                return;
-        }
-        this.emit('threshold-applied', 'failed');
     }
 
     destroy() {
