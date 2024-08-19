@@ -6,10 +6,8 @@ import * as Helper from '../lib/helper.js';
 
 const {exitCode, fileExists, readFileInt, readFile, runCommandCtl} = Helper;
 
-const VENDOR_FRAMEWORK = '/sys/devices/platform/framework_laptop';
 const BAT1_END_PATH = '/sys/class/power_supply/BAT1/charge_control_end_threshold';
 const CROS_EC_PATH = '/dev/cros_ec';
-
 
 export const FrameworkSingleBatteryBAT1 = GObject.registerClass({
     Signals: {'threshold-applied': {param_types: [GObject.TYPE_STRING]}},
