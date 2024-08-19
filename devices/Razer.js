@@ -3,7 +3,7 @@
 import GLib from 'gi://GLib';
 import GObject from 'gi://GObject';
 import * as Helper from '../lib/helper.js';
-const {execCheck} = Helper;
+const {exitCode, execCheck} = Helper;
 
 export const  RazerSingleBattery = GObject.registerClass({
     Signals: {'threshold-applied': {param_types: [GObject.TYPE_STRING]}},
@@ -56,7 +56,7 @@ export const  RazerSingleBattery = GObject.registerClass({
                 ((endValue !== 100) && (firstLine[3] === 'true') && (parseInt(firstLine[5]) === endValue))) {
                 this.endLimitValue = endValue;
                 this.emit('threshold-applied', 'success');
-                return 0;
+                return exitCode.SUCCESS;
             }
         }
         if (endValue === 100)
@@ -85,11 +85,11 @@ export const  RazerSingleBattery = GObject.registerClass({
                 this.mode = chargingMode;
                 this.endLimitValue = endValue;
                 this.emit('threshold-applied', 'success');
-                return 0;
+                return exitCode.SUCCESS;
             }
         }
         this.emit('threshold-applied', 'failed');
-        return 1;
+        return exitCode.ERROR;
     }
 
     destroy() {
