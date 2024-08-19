@@ -4,7 +4,7 @@ import GLib from 'gi://GLib';
 import GObject from 'gi://GObject';
 import * as Helper from '../lib/helper.js';
 
-const {fileExists, readFile, readFileInt, runCommandCtl} = Helper;
+const {exitCode, fileExists, readFile, readFileInt, runCommandCtl} = Helper;
 
 const VENDOR_SYSTEM76 = '/sys/module/system76_acpi';
 const DMI_PATH = '/sys/devices/virtual/dmi/id/sys_vendor';
@@ -62,32 +62,43 @@ export const System76SingleBattery = GObject.registerClass({
     }
 
     async setThresholdLimit(chargingMode) {
-        this._status = 0;
+        let status;
         this._endValue = this._settings.get_int(`current-${chargingMode}-end-threshold`);
         this._startValue = this._settings.get_int(`current-${chargingMode}-start-threshold`);
+
         if (this._verifyThreshold())
-            return this._status;
+            return exitCode.SUCCESS;
+
         // Some device wont update end threshold if start threshold > end threshold
         if (this._startValue >= this._oldEndValue)
-            [this._status] = await runCommandCtl(this.ctlPath, 'BAT0_END_START', `${this._endValue}`, `${this._startValue}`, null);
+            [status] = await runCommandCtl(this.ctlPath, 'BAT0_END_START', `${this._endValue}`, `${this._startValue}`, null);
         else
-            [this._status] = await runCommandCtl(this.ctlPath, 'BAT0_START_END', `${this._endValue}`, `${this._startValue}`, null);
+            [status] = await runCommandCtl(this.ctlPath, 'BAT0_START_END', `${this._endValue}`, `${this._startValue}`, null);
 
-        if (this._status === 0) {
-            if (this._verifyThreshold())
-                return this._status;
+        if (status === exitCode.ERROR) {
+            this.emit('threshold-applied', 'failed');
+            return exitCode.ERROR;
         }
+
+        if (this._verifyThreshold())
+            return exitCode.SUCCESS;
 
         if (this._delayReadTimeoutId)
             GLib.source_remove(this._delayReadTimeoutId);
         this._delayReadTimeoutId = null;
 
-        this._delayReadTimeoutId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 200, () => {
-            this._reVerifyThreshold();
-            this._delayReadTimeoutId = null;
-            return GLib.SOURCE_REMOVE;
+        await new Promise(resolve => {
+            this._delayReadTimeoutId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 200, () => {
+                resolve();
+                return GLib.SOURCE_REMOVE;
+            });
         });
-        return this._status;
+
+        if (this._verifyThreshold())
+            return exitCode.SUCCESS;
+
+        this.emit('threshold-applied', 'failed');
+        return exitCode.ERROR;
     }
 
     _verifyThreshold() {
@@ -100,14 +111,6 @@ export const System76SingleBattery = GObject.registerClass({
             return true;
         }
         return false;
-    }
-
-    _reVerifyThreshold() {
-        if (this._status === 0) {
-            if (this._verifyThreshold())
-                return;
-        }
-        this.emit('threshold-applied', 'failed');
     }
 
     destroy() {
