@@ -4,7 +4,7 @@ import Gio from 'gi://Gio';
 import GObject from 'gi://GObject';
 import * as Helper from '../lib/helper.js';
 
-const {fileExists, readFileInt, readFileUri, runCommandCtl} = Helper;
+const {exitCode, fileExists, readFileInt, readFileUri, runCommandCtl} = Helper;
 
 const VENDOR_TOSHIBA = '/sys/module/toshiba_acpi';
 const BAT0_END_PATH = '/sys/class/power_supply/BAT0/charge_control_end_threshold';
@@ -57,13 +57,13 @@ export const ToshibaSingleBatteryBAT0 = GObject.registerClass({
         else if (chargingMode === 'max')
             endValue = 80;
         const [status] = await runCommandCtl(this.ctlPath, 'BAT0_END', `${endValue}`, null, null);
-        if (status === 0) {
+        if (status === exitCode.SUCCESS) {
             this.endLimitValue = endValue;
             this.emit('threshold-applied', 'success');
-            return 0;
+            return exitCode.SUCCESS;
         }
         this.emit('threshold-applied', 'failed');
-        return 1;
+        return exitCode.ERROR;
     }
 
     _initializeBatteryMonitoring() {
@@ -138,13 +138,13 @@ export const ToshibaSingleBatteryBAT1 = GObject.registerClass({
         else if (chargingMode === 'max')
             endValue = 80;
         const [status] = await runCommandCtl(this.ctlPath, 'BAT1_END', `${endValue}`, null, null);
-        if (status === 0) {
+        if (status === exitCode.SUCCESS) {
             this.endLimitValue = endValue;
             this.emit('threshold-applied', 'success');
-            return 0;
+            return exitCode.SUCCESS;
         }
         this.emit('threshold-applied', 'failed');
-        return 1;
+        return exitCode.ERROR;
     }
 
     _initializeBatteryMonitoring() {
