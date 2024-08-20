@@ -297,6 +297,7 @@ export const ThinkpadSingleBatteryBAT0 = GObject.registerClass({
                 return GLib.SOURCE_REMOVE;
             });
         });
+        this._delayReadTimeoutId = null;
 
         if (this._verifyThreshold())
             return exitCode.SUCCESS;
@@ -495,6 +496,7 @@ export const ThinkpadSingleBatteryBAT1 = GObject.registerClass({
                 return GLib.SOURCE_REMOVE;
             });
         });
+        this._delayReadTimeoutId = null;
 
         if (this._verifyThreshold())
             return exitCode.SUCCESS;

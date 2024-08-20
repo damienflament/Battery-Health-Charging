@@ -89,6 +89,7 @@ export const SonySingleBattery = GObject.registerClass({
                 return GLib.SOURCE_REMOVE;
             });
         });
+        this._delayReadTimeoutId = null;
 
         if (this._verifyThreshold()) {
             this._updateHighSpeedCharging = false;

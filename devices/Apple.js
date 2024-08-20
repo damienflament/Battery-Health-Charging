@@ -95,6 +95,7 @@ export const AppleSingleBattery = GObject.registerClass({
                 return GLib.SOURCE_REMOVE;
             });
         });
+        this._delayReadTimeoutId = null;
 
         if (this._verifyThreshold())
             return exitCode.SUCCESS;
