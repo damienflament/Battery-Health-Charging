@@ -398,6 +398,16 @@ case "$TOOLCMD" in
         "$ARG1" --driver "$ARG2" --charge-limit "$ARG3" && \
         exit "$EXIT_SUCCESS" || exit "$EXIT_ERROR"
         ;;
+    ECTOOL_THRESHOLD_READ)
+        validate_path "$ARG1" "/ectool" && \
+        "$ARG1" chargecontrol && \
+        exit "$EXIT_SUCCESS" || exit "$EXIT_ERROR"
+        ;;
+    ECTOOL_THRESHOLD_WRITE)
+        validate_path "$ARG1" "/ectool" && \
+        "$ARG1" chargecontrol normal "$ARG2" "$ARG3" && \
+        exit "$EXIT_SUCCESS" || exit "$EXIT_ERROR"
+        ;;
     *)
         echo "Unknown Command"
         exit ${EXIT_ERROR}

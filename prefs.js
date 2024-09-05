@@ -5,6 +5,7 @@ import {ExtensionPreferences} from 'resource:///org/gnome/Shell/Extensions/js/ex
 import * as DeviceList from './lib/deviceList.js';
 import {General} from './preferences/general.js';
 import {Apple} from './preferences/apple.js';
+import {Chromebook} from './preferences/chromebook.js';
 import {Dell} from './preferences/dell.js';
 import {Framework} from './preferences/framework.js';
 import {Thinkpad} from './preferences/thinkpad.js';
@@ -41,6 +42,8 @@ export default class BatteryHealthChargingPrefs extends ExtensionPreferences {
                 window.add(new Dell(settings));
             if (currentDevice.type === 31 && settings.get_strv('multiple-configuration-supported').length > 1) // device.type 31 is Framework
                 window.add(new Framework(settings));
+            if (currentDevice.type === 35 && settings.get_strv('multiple-configuration-supported').length > 1) // device.type 31 is Chromebook
+                window.add(new Chromebook(settings));
             if (currentDevice.type === 20 || currentDevice.type === 21) // device.type 20|21 is Thinkpad
                 window.add(new Thinkpad(settings));
         }
