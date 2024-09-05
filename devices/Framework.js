@@ -95,13 +95,20 @@ export const FrameworkSingleBatteryBAT1 = GObject.registerClass({
         return status;
     }
 
+    _emitThresholdError(status) {
+        if (status === exitCode.ERROR)
+            this.emit('threshold-applied', 'error');
+        else if (status === exitCode.TIMEOUT)
+            this.emit('threshold-applied', 'timeout');
+    }
+
     async _setThresholdLimitSysFs() {
         if (this._verifySysFsThreshold())
             return exitCode.SUCCESS;
 
         const [status] = await runCommandCtl(this.ctlPath, 'BAT1_END', `${this._endValue}`);
-        if (status === exitCode.ERROR) {
-            this.emit('threshold-applied', 'failed');
+        if (status !== exitCode.SUCCESS) {
+            this._emitThresholdError(status);
             return exitCode.ERROR;
         }
 
@@ -123,7 +130,7 @@ export const FrameworkSingleBatteryBAT1 = GObject.registerClass({
         if (this._verifySysFsThreshold())
             return exitCode.SUCCESS;
 
-        this.emit('threshold-applied', 'failed');
+        this.emit('threshold-applied', 'not-updated');
         return exitCode.ERROR;
     }
 
@@ -139,8 +146,8 @@ export const FrameworkSingleBatteryBAT1 = GObject.registerClass({
     async _setThresholdFrameworkTool() {
         const frameworkToolDriver = fileExists(CROS_EC_PATH) ? 'cros-ec' : 'portio';
         let [status, output] = await runCommandCtl(this.ctlPath, 'FRAMEWORK_TOOL_THRESHOLD_READ', this._frameworkToolPath, frameworkToolDriver);
-        if (status === exitCode.ERROR) {
-            this.emit('threshold-applied', 'failed');
+        if (status !== exitCode.SUCCESS) {
+            this._emitThresholdError(status);
             return exitCode.ERROR;
         }
 
@@ -148,15 +155,15 @@ export const FrameworkSingleBatteryBAT1 = GObject.registerClass({
             return exitCode.SUCCESS;
 
         [status, output] = await runCommandCtl(this.ctlPath, 'FRAMEWORK_TOOL_THRESHOLD_WRITE', this._frameworkToolPath, frameworkToolDriver, `${this._endValue}`);
-        if (status === exitCode.ERROR) {
-            this.emit('threshold-applied', 'failed');
+        if (status !== exitCode.SUCCESS) {
+            this._emitThresholdError(status);
             return exitCode.ERROR;
         }
 
         if (this._verifyFrameworkToolThreshold(output))
             return exitCode.SUCCESS;
 
-        this.emit('threshold-applied', 'failed');
+        this.emit('threshold-applied', 'not-updated');
         return exitCode.ERROR;
     }
 

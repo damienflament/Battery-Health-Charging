@@ -135,21 +135,23 @@ export const DellSmBiosSingleBattery = GObject.registerClass({
         return status;
     }
 
+    _emitThresholdError(status) {
+        if (status === exitCode.ERROR)
+            this.emit('threshold-applied', 'error');
+        else if (status === exitCode.TIMEOUT)
+            this.emit('threshold-applied', 'timeout');
+    }
+
     // sysfs
     async _setThresholdLimitSysFs() {
-        let status;
-
         if (this._verifySysFsThreshold())
             return exitCode.SUCCESS;
 
         // Some device wont update end threshold if start threshold > end threshold
-        if (this._startValue >= this._oldEndValue)
-            [status] = await runCommandCtl(this.ctlPath, this._dellEndStartCmd, this._chargingMode, `${this._endValue}`, `${this._startValue}`);
-        else
-            [status] = await runCommandCtl(this.ctlPath, this._dellStartEndCmd, this._chargingMode, `${this._endValue}`, `${this._startValue}`);
-
-        if (status === exitCode.ERROR) {
-            this.emit('threshold-applied', 'failed');
+        const cmd = this._startValue >= this._oldEndValue ? this._dellEndStartCmd : this._dellStartEndCmd;
+        const [status] = await runCommandCtl(this.ctlPath, cmd, this._chargingMode, `${this._endValue}`, `${this._startValue}`);
+        if (status !== exitCode.SUCCESS) {
+            this._emitThresholdError(status);
             return exitCode.ERROR;
         }
 
@@ -171,7 +173,7 @@ export const DellSmBiosSingleBattery = GObject.registerClass({
         if (this._verifySysFsThreshold())
             return exitCode.SUCCESS;
 
-        this.emit('threshold-applied', 'failed');
+        this.emit('threshold-applied', 'not-updated');
         return exitCode.ERROR;
     }
 
@@ -200,25 +202,36 @@ export const DellSmBiosSingleBattery = GObject.registerClass({
 
     // libsmbios
     async _setThresholdLimitLibSmbios() {
+        let status;
         let verified = await this._verifySmbiosThreshold();
         if (verified)
             return exitCode.SUCCESS;
 
         if (this._chargingMode === 'adv' || this._chargingMode === 'exp')
-            await runCommandCtl(this.ctlPath, 'DELL_SMBIOS_WRITE', this._smbiosPath, this._chargingMode);
+            [status] = await runCommandCtl(this.ctlPath, 'DELL_SMBIOS_WRITE', this._smbiosPath, this._chargingMode);
         else
-            await runCommandCtl(this.ctlPath, 'DELL_SMBIOS_WRITE', this._smbiosPath, `${this._startValue}`, `${this._endValue}`);
+            [status] = await runCommandCtl(this.ctlPath, 'DELL_SMBIOS_WRITE', this._smbiosPath, `${this._startValue}`, `${this._endValue}`);
+
+        if (status !== exitCode.SUCCESS) {
+            this._emitThresholdError(status);
+            return exitCode.ERROR;
+        }
 
         verified = await this._verifySmbiosThreshold();
         if (verified)
             return exitCode.SUCCESS;
 
-        this.emit('threshold-applied', 'failed');
+        this.emit('threshold-applied', 'not-updated');
         return exitCode.ERROR;
     }
 
     async _verifySmbiosThreshold() {
-        const [, output] = await runCommandCtl(this.ctlPath, 'DELL_SMBIOS_READ', this._smbiosPath);
+        const [status, output] = await runCommandCtl(this.ctlPath, 'DELL_SMBIOS_READ', this._smbiosPath);
+        if (status !== exitCode.SUCCESS) {
+            this._emitThresholdError(status);
+            return false;
+        }
+
         const filteredOutput = output.trim().replace('(', '').replace(')', '').replace(',', '').replace(/:/g, '');
         const splitOutput = filteredOutput.split('\n');
         const firstLine = splitOutput[0].split(' ');
@@ -289,16 +302,25 @@ export const DellSmBiosSingleBattery = GObject.registerClass({
         if (status === 65 || status === 58) {
             this.emit('threshold-applied', 'password-required');
             return exitCode.SUCCESS;
+        } else if (status !== exitCode.SUCCESS) {
+            this._emitThresholdError(status);
+            return exitCode.ERROR;
         }
+
         const verified = await this._verifyCctkThreshold();
         if (verified)
             return exitCode.SUCCESS;
-        this.emit('threshold-applied', 'failed');
+
+        this.emit('threshold-applied', 'not-updated');
         return exitCode.ERROR;
     }
 
     async _verifyCctkThreshold() {
-        const [, output] = await runCommandCtl(this.ctlPath, 'DELL_CCTK_READ', this._cctkPath);
+        const [status, output] = await runCommandCtl(this.ctlPath, 'DELL_CCTK_READ', this._cctkPath);
+        if (status !== exitCode.SUCCESS) {
+            this._emitThresholdError(status);
+            return false;
+        }
         const filteredOutput = output.trim().replace('=', ' ').replace(':', ' ').replace('-', ' ');
         const splitOutput = filteredOutput.split(' ');
         if (splitOutput[0] === 'PrimaryBattChargeCfg') {

@@ -77,7 +77,6 @@ export const ThinkpadLegacyDualBattery = GObject.registerClass({
     async setThresholdLimit(chargingMode) {
         if (this.battery0Removed)
             return exitCode.SUCCESS;
-        let status;
         const endValue = this._settings.get_int(`current-${chargingMode}-end-threshold`);
         const startValue = this._settings.get_int(`current-${chargingMode}-start-threshold`);
         const oldEndValue = readFileInt(TP_BAT0_END);
@@ -89,10 +88,15 @@ export const ThinkpadLegacyDualBattery = GObject.registerClass({
             return exitCode.SUCCESS;
         }
         // Some device wont update end threshold if start threshold > end threshold
-        if (startValue >= oldEndValue)
-            [status] = await runCommandCtl(this.ctlPath, 'TP_BAT0_END_START', `${endValue}`, `${startValue}`);
-        else
-            [status] = await runCommandCtl(this.ctlPath, 'TP_BAT0_START_END', `${endValue}`, `${startValue}`);
+        const cmd = startValue >= oldEndValue ? 'TP_BAT0_END_START' : 'TP_BAT0_START_END';
+        const [status] = await runCommandCtl(this.ctlPath, cmd, `${endValue}`, `${startValue}`);
+        if (status === exitCode.ERROR) {
+            this.emit('threshold-applied', 'error');
+            return exitCode.ERROR;
+        } else if (status === exitCode.TIMEOUT) {
+            this.emit('threshold-applied', 'timeout');
+            return exitCode.ERROR;
+        }
         if (status === exitCode.SUCCESS) {
             this.endLimitValue = readFileInt(TP_BAT0_END);
             this.startLimitValue = readFileInt(TP_BAT0_START);
@@ -101,14 +105,14 @@ export const ThinkpadLegacyDualBattery = GObject.registerClass({
                 return exitCode.SUCCESS;
             }
         }
-        this.emit('threshold-applied', 'failed');
+        this.emit('threshold-applied', 'not-updated');
         return exitCode.ERROR;
     }
 
     async setThresholdLimit2(chargingMode2) {
         if (this.battery1Removed)
             return exitCode.SUCCESS;
-        let status;
+
         const endValue = this._settings.get_int(`current-${chargingMode2}-end-threshold2`);
         const startValue = this._settings.get_int(`current-${chargingMode2}-start-threshold2`);
         const oldEndValue = readFileInt(TP_BAT1_END);
@@ -116,19 +120,24 @@ export const ThinkpadLegacyDualBattery = GObject.registerClass({
         if (oldEndValue === endValue && oldStartValue === startValue) {
             this.endLimit2Value = endValue;
             this.startLimit2Value = startValue;
-            this.emit('threshold-applied', 'success');
+            this.emit('threshold-applied', 'success-bat2');
             return exitCode.SUCCESS;
         }
         // Some device wont update end threshold if start threshold > end threshold
-        if (startValue >= oldEndValue)
-            [status] = await runCommandCtl(this.ctlPath, 'TP_BAT1_END_START', `${endValue}`, `${startValue}`);
-        else
-            [status] = await runCommandCtl(this.ctlPath, 'TP_BAT1_START_END', `${endValue}`, `${startValue}`);
+        const cmd = startValue >= oldEndValue ? 'TP_BAT1_END_START' : 'TP_BAT1_START_END';
+        const [status] = await runCommandCtl(this.ctlPath, cmd, `${endValue}`, `${startValue}`);
+        if (status === exitCode.ERROR) {
+            this.emit('threshold-applied', 'error');
+            return exitCode.ERROR;
+        } else if (status === exitCode.TIMEOUT) {
+            this.emit('threshold-applied', 'timeout');
+            return exitCode.ERROR;
+        }
         if (status === exitCode.SUCCESS) {
             this.endLimit2Value = readFileInt(TP_BAT1_END);
             this.startLimit2Value = readFileInt(TP_BAT1_START);
             if (endValue === this.endLimit2Value && startValue === this.startLimit2Value) {
-                this.emit('threshold-applied', 'success');
+                this.emit('threshold-applied', 'success-bat2');
                 return exitCode.SUCCESS;
             }
         }
@@ -240,7 +249,6 @@ export const ThinkpadLegacySingleBatteryBAT0 = GObject.registerClass({
     }
 
     async setThresholdLimit(chargingMode) {
-        let status;
         this._endValue = this._settings.get_int(`current-${chargingMode}-end-threshold`);
         this._startValue = this._settings.get_int(`current-${chargingMode}-start-threshold`);
 
@@ -248,13 +256,13 @@ export const ThinkpadLegacySingleBatteryBAT0 = GObject.registerClass({
             return exitCode.SUCCESS;
 
         // Some device wont update end threshold if start threshold > end threshold
-        if (this._startValue >= this._oldEndValue)
-            [status] = await runCommandCtl(this.ctlPath, 'TP_BAT0_END_START', `${this._endValue}`, `${this._startValue}`);
-        else
-            [status] = await runCommandCtl(this.ctlPath, 'TP_BAT0_START_END', `${this._endValue}`, `${this._startValue}`);
-
+        const cmd = this._startValue >= this._oldEndValue ? 'TP_BAT0_END_START' : 'TP_BAT0_START_END';
+        const [status] = await runCommandCtl(this.ctlPath, cmd, `${this._endValue}`, `${this._startValue}`);
         if (status === exitCode.ERROR) {
-            this.emit('threshold-applied', 'failed');
+            this.emit('threshold-applied', 'error');
+            return exitCode.ERROR;
+        } else if (status === exitCode.TIMEOUT) {
+            this.emit('threshold-applied', 'timeout');
             return exitCode.ERROR;
         }
 
@@ -276,7 +284,7 @@ export const ThinkpadLegacySingleBatteryBAT0 = GObject.registerClass({
         if (this._verifyThreshold())
             return exitCode.SUCCESS;
 
-        this.emit('threshold-applied', 'failed');
+        this.emit('threshold-applied', 'not-updated');
         return exitCode.ERROR;
     }
 
@@ -348,7 +356,6 @@ export const ThinkpadLegacySingleBatteryBAT1 = GObject.registerClass({
     }
 
     async setThresholdLimit(chargingMode) {
-        let status;
         this._endValue = this._settings.get_int(`current-${chargingMode}-end-threshold`);
         this._startValue = this._settings.get_int(`current-${chargingMode}-start-threshold`);
 
@@ -356,13 +363,13 @@ export const ThinkpadLegacySingleBatteryBAT1 = GObject.registerClass({
             return exitCode.SUCCESS;
 
         // Some device wont update end threshold if start threshold > end threshold
-        if (this._startValue >= this._oldEndValue)
-            [status] = await runCommandCtl(this.ctlPath, 'TP_BAT1_END_START', `${this._endValue}`, `${this._startValue}`);
-        else
-            [status] = await runCommandCtl(this.ctlPath, 'TP_BAT1_START_END', `${this._endValue}`, `${this._startValue}`);
-
+        const cmd = this._startValue >= this._oldEndValue ? 'TP_BAT1_END_START' : 'TP_BAT1_START_END';
+        const [status] = await runCommandCtl(this.ctlPath, cmd, `${this._endValue}`, `${this._startValue}`);
         if (status === exitCode.ERROR) {
-            this.emit('threshold-applied', 'failed');
+            this.emit('threshold-applied', 'error');
+            return exitCode.ERROR;
+        } else if (status === exitCode.TIMEOUT) {
+            this.emit('threshold-applied', 'timeout');
             return exitCode.ERROR;
         }
 
@@ -384,7 +391,7 @@ export const ThinkpadLegacySingleBatteryBAT1 = GObject.registerClass({
         if (this._verifyThreshold())
             return exitCode.SUCCESS;
 
-        this.emit('threshold-applied', 'failed');
+        this.emit('threshold-applied', 'not-updated');
         return exitCode.ERROR;
     }
 

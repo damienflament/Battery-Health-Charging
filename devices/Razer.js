@@ -88,7 +88,7 @@ export const  RazerSingleBattery = GObject.registerClass({
                 return exitCode.SUCCESS;
             }
         }
-        this.emit('threshold-applied', 'failed');
+        this.emit('threshold-applied', 'not-updated');
         return exitCode.ERROR;
     }
 

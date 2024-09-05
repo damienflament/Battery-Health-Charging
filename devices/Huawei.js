@@ -62,7 +62,10 @@ export const HuaweiSingleBattery = GObject.registerClass({
 
         const [status] = await runCommandCtl(this.ctlPath, 'HUAWEI', `${this._endValue}`, `${this._startValue}`);
         if (status === exitCode.ERROR) {
-            this.emit('threshold-applied', 'failed');
+            this.emit('threshold-applied', 'error');
+            return exitCode.ERROR;
+        } else if (status === exitCode.TIMEOUT) {
+            this.emit('threshold-applied', 'timeout');
             return exitCode.ERROR;
         }
 
@@ -84,7 +87,7 @@ export const HuaweiSingleBattery = GObject.registerClass({
         if (this._verifyThreshold())
             return exitCode.SUCCESS;
 
-        this.emit('threshold-applied', 'failed');
+        this.emit('threshold-applied', 'not-updated');
         return exitCode.ERROR;
     }
 

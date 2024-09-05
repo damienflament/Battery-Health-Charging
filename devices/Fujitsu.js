@@ -53,7 +53,10 @@ export const FujitsuSingleBatteryCMB0 = GObject.registerClass({
         this._endValue = this._settings.get_int(`current-${chargingMode}-end-threshold`);
         const [status] = await runCommandCtl(this.ctlPath, 'CMB0_END', `${this._endValue}`);
         if (status === exitCode.ERROR) {
-            this.emit('threshold-applied', 'failed');
+            this.emit('threshold-applied', 'error');
+            return exitCode.ERROR;
+        } else if (status === exitCode.TIMEOUT) {
+            this.emit('threshold-applied', 'timeout');
             return exitCode.ERROR;
         }
 
@@ -75,7 +78,7 @@ export const FujitsuSingleBatteryCMB0 = GObject.registerClass({
         if (this._verifyThreshold())
             return exitCode.SUCCESS;
 
-        this.emit('threshold-applied', 'failed');
+        this.emit('threshold-applied', 'not-updated');
         return exitCode.ERROR;
     }
 
@@ -138,7 +141,10 @@ export const FujitsuSingleBatteryCMB1 = GObject.registerClass({
         this._endValue = this._settings.get_int(`current-${chargingMode}-end-threshold`);
         const [status] = await runCommandCtl(this.ctlPath, 'CMB1_END', `${this._endValue}`, null, null);
         if (status === exitCode.ERROR) {
-            this.emit('threshold-applied', 'failed');
+            this.emit('threshold-applied', 'error');
+            return exitCode.ERROR;
+        } else if (status === exitCode.TIMEOUT) {
+            this.emit('threshold-applied', 'timeout');
             return exitCode.ERROR;
         }
 
@@ -160,7 +166,7 @@ export const FujitsuSingleBatteryCMB1 = GObject.registerClass({
         if (this._verifyThreshold())
             return exitCode.SUCCESS;
 
-        this.emit('threshold-applied', 'failed');
+        this.emit('threshold-applied', 'not-updated');
         return exitCode.ERROR;
     }
 

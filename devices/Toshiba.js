@@ -61,8 +61,11 @@ export const ToshibaSingleBatteryBAT0 = GObject.registerClass({
             this.endLimitValue = endValue;
             this.emit('threshold-applied', 'success');
             return exitCode.SUCCESS;
+        } else if (status === exitCode.ERROR) {
+            this.emit('threshold-applied', 'error');
+        } else if (status === exitCode.TIMEOUT) {
+            this.emit('threshold-applied', 'timeout');
         }
-        this.emit('threshold-applied', 'failed');
         return exitCode.ERROR;
     }
 
@@ -142,8 +145,11 @@ export const ToshibaSingleBatteryBAT1 = GObject.registerClass({
             this.endLimitValue = endValue;
             this.emit('threshold-applied', 'success');
             return exitCode.SUCCESS;
+        } else if (status === exitCode.ERROR) {
+            this.emit('threshold-applied', 'error');
+        } else if (status === exitCode.TIMEOUT) {
+            this.emit('threshold-applied', 'timeout');
         }
-        this.emit('threshold-applied', 'failed');
         return exitCode.ERROR;
     }
 
