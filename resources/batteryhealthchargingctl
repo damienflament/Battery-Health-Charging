@@ -55,6 +55,62 @@ ARG1=${2:-0}
 ARG2=${3:-0}
 ARG3=${4:-0}
 
+function check_installation() {
+    printf -v versions '%s\n%s' "$(pkaction --version | cut -d' ' -f3)" "0.106"
+    if [[ $versions != "$(sort -V <<< "$versions")" ]];then
+        LEGACY_POLKIT=false
+    else
+        LEGACY_POLKIT=true
+    fi
+    EXTDIR=$ARG1
+    TOOL_USER=$ARG2
+    RULE_IN="${EXTDIR}/10-${RULE_BASE}.rules"
+    if [[ "$LEGACY_POLKIT" = true ]];then
+        RULE_IN="${RULE_IN}.legacy"
+        ACTION_IN="${EXTDIR}/${ACTION_BASE}.policy.in"
+    fi
+    TOOL_IN="${EXTDIR}/${BHC_BASE}"
+    TOOL_OUT="${BHC_DIR}/${BHC_BASE}-${TOOL_USER}"
+    RULE_OUT="${RULE_DIR}/10-${RULE_BASE}-${TOOL_USER}.rules"
+    ACTION_ID="${RULE_BASE}.${TOOL_USER}"
+    ACTION_OUT="/usr/share/polkit-1/actions/${ACTION_ID}.policy"
+
+    if [[ "$LEGACY_POLKIT" = true ]];then
+        echo "$EXTENSION_NAME: checking legacy rules and policies !"
+        if ! sed -e "s:{{RULE_BASE}}:${RULE_BASE}:g" "${RULE_IN}" | \
+            cmp --silent "${RULE_OUT}"
+        then
+            echo "$EXTENSION_NAME: installation needs to update rules !"
+            exit ${EXIT_NEEDS_UPDATE}
+        else
+            if ! sed -e "s:{{PATH}}:${TOOL_OUT}:g" \
+                -e "s:{{ACTION_BASE}}:${ACTION_BASE}:g" \
+                -e "s:{{ACTION_ID}}:${ACTION_ID}:g" "${ACTION_IN}" | \
+                cmp --silent "${ACTION_OUT}"
+            then
+                echo "$EXTENSION_NAME: installation needs to update policies!"
+                exit ${EXIT_NEEDS_UPDATE}
+            fi
+        fi
+    else
+        echo "$EXTENSION_NAME: checking rules !"
+        if ! sed -e "s:{{TOOL_OUT}}:${TOOL_OUT}:g" \
+            -e "s:{{TOOL_USER}}:${TOOL_USER}:g" "${RULE_IN}" | \
+            cmp --silent "${RULE_OUT}"
+        then
+            echo "$EXTENSION_NAME: installation needs updating rules!"
+            exit ${EXIT_NEEDS_UPDATE}
+        fi
+    fi
+    echo "$EXTENSION_NAME: checking ctl !"
+    if ! cmp --silent "${TOOL_IN}" "${TOOL_OUT}";then
+        echo "$EXTENSION_NAME: installation needs updating ctl!"
+        exit ${EXIT_NEEDS_UPDATE}
+    fi
+    echo "$EXTENSION_NAME: installation is up to date "
+    exit ${EXIT_SUCCESS}
+}
+
 function exit_modifier() {
     if [ "$1" -eq 0 ] && [ "$2" -eq 0 ]; then
         exit ${EXIT_SUCCESS}
@@ -64,6 +120,9 @@ function exit_modifier() {
 }
 
 case "$TOOLCMD" in
+    CHECKINSTALLATION)
+        check_installation
+        ;;
     BAT0_END)
         echo "$ARG1" > "$BAT0_END_PATH"
         COMMAND1_EXIT_STATUS="$?"
@@ -351,61 +410,6 @@ case "$TOOLCMD" in
         else
             exit ${EXIT_ERROR}
         fi
-        ;;
-    CHECKINSTALLATION)
-        printf -v versions '%s\n%s' "$(pkaction --version | cut -d' ' -f3)" "0.106"
-        if [[ $versions != "$(sort -V <<< "$versions")" ]];then
-            LEGACY_POLKIT=false
-        else
-            LEGACY_POLKIT=true
-        fi
-        EXTDIR=$ARG1
-        TOOL_USER=$ARG2
-        RULE_IN="${EXTDIR}/10-${RULE_BASE}.rules"
-        if [[ "$LEGACY_POLKIT" = true ]];then
-            RULE_IN="${RULE_IN}.legacy"
-            ACTION_IN="${EXTDIR}/${ACTION_BASE}.policy.in"
-        fi
-        TOOL_IN="${EXTDIR}/${BHC_BASE}"
-        TOOL_OUT="${BHC_DIR}/${BHC_BASE}-${TOOL_USER}"
-        RULE_OUT="${RULE_DIR}/10-${RULE_BASE}-${TOOL_USER}.rules"
-        ACTION_ID="${RULE_BASE}.${TOOL_USER}"
-        ACTION_OUT="/usr/share/polkit-1/actions/${ACTION_ID}.policy"
-
-        if [[ "$LEGACY_POLKIT" = true ]];then
-            echo "$EXTENSION_NAME: checking legacy rules and policies !"
-            if ! sed -e "s:{{RULE_BASE}}:${RULE_BASE}:g" "${RULE_IN}" | \
-                cmp --silent "${RULE_OUT}"
-            then
-                echo "$EXTENSION_NAME: installation needs to update rules !"
-                exit ${EXIT_NEEDS_UPDATE}
-            else
-                if ! sed -e "s:{{PATH}}:${TOOL_OUT}:g" \
-                    -e "s:{{ACTION_BASE}}:${ACTION_BASE}:g" \
-                    -e "s:{{ACTION_ID}}:${ACTION_ID}:g" "${ACTION_IN}" | \
-                    cmp --silent "${ACTION_OUT}"
-                then
-                    echo "$EXTENSION_NAME: installation needs to update policies!"
-                    exit ${EXIT_NEEDS_UPDATE}
-                fi
-            fi
-        else
-            echo "$EXTENSION_NAME: checking rules !"
-            if ! sed -e "s:{{TOOL_OUT}}:${TOOL_OUT}:g" \
-                -e "s:{{TOOL_USER}}:${TOOL_USER}:g" "${RULE_IN}" | \
-                cmp --silent "${RULE_OUT}"
-            then
-                echo "$EXTENSION_NAME: installation needs updating rules!"
-                exit ${EXIT_NEEDS_UPDATE}
-            fi
-        fi
-        echo "$EXTENSION_NAME: checking ctl !"
-        if ! cmp --silent "${TOOL_IN}" "${TOOL_OUT}";then
-            echo "$EXTENSION_NAME: installation needs updating ctl!"
-            exit ${EXIT_NEEDS_UPDATE}
-        fi
-        echo "$EXTENSION_NAME: installation is up to date "
-        exit ${EXIT_SUCCESS}
         ;;
     *)
         echo "Unknown" >&2
