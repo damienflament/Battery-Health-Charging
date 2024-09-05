@@ -105,7 +105,7 @@ export const System76SingleBattery = GObject.registerClass({
     _verifyThreshold() {
         this._oldEndValue = readFileInt(BAT0_END_PATH);
         this._oldStartValue = readFileInt(BAT0_START_PATH);
-        if ((this._oldEndValue === this._endValue) && (this._oldStartValue === this._startValue)) {
+        if (this._oldEndValue === this._endValue && this._oldStartValue === this._startValue) {
             this.endLimitValue = this._endValue;
             this.startLimitValue = this._startValue;
             this.emit('threshold-applied', 'success');

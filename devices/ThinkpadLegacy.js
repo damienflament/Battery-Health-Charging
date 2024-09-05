@@ -82,7 +82,7 @@ export const ThinkpadLegacyDualBattery = GObject.registerClass({
         const startValue = this._settings.get_int(`current-${chargingMode}-start-threshold`);
         const oldEndValue = readFileInt(TP_BAT0_END);
         const oldStartValue = readFileInt(TP_BAT0_START);
-        if ((oldEndValue === endValue) && (oldStartValue === startValue)) {
+        if (oldEndValue === endValue && oldStartValue === startValue) {
             this.endLimitValue = endValue;
             this.startLimitValue = startValue;
             this.emit('threshold-applied', 'success');
@@ -96,7 +96,7 @@ export const ThinkpadLegacyDualBattery = GObject.registerClass({
         if (status === exitCode.SUCCESS) {
             this.endLimitValue = readFileInt(TP_BAT0_END);
             this.startLimitValue = readFileInt(TP_BAT0_START);
-            if ((endValue === this.endLimitValue) && (startValue === this.startLimitValue)) {
+            if (endValue === this.endLimitValue && startValue === this.startLimitValue) {
                 this.emit('threshold-applied', 'success');
                 return exitCode.SUCCESS;
             }
@@ -113,7 +113,7 @@ export const ThinkpadLegacyDualBattery = GObject.registerClass({
         const startValue = this._settings.get_int(`current-${chargingMode2}-start-threshold2`);
         const oldEndValue = readFileInt(TP_BAT1_END);
         const oldStartValue = readFileInt(TP_BAT1_START);
-        if ((oldEndValue === endValue) && (oldStartValue === startValue)) {
+        if (oldEndValue === endValue && oldStartValue === startValue) {
             this.endLimit2Value = endValue;
             this.startLimit2Value = startValue;
             this.emit('threshold-applied', 'success');
@@ -127,7 +127,7 @@ export const ThinkpadLegacyDualBattery = GObject.registerClass({
         if (status === exitCode.SUCCESS) {
             this.endLimit2Value = readFileInt(TP_BAT1_END);
             this.startLimit2Value = readFileInt(TP_BAT1_START);
-            if ((endValue === this.endLimit2Value) && (startValue === this.startLimit2Value)) {
+            if (endValue === this.endLimit2Value && startValue === this.startLimit2Value) {
                 this.emit('threshold-applied', 'success');
                 return exitCode.SUCCESS;
             }
@@ -283,7 +283,7 @@ export const ThinkpadLegacySingleBatteryBAT0 = GObject.registerClass({
     _verifyThreshold() {
         this._oldEndValue = readFileInt(TP_BAT0_END);
         this._oldStartValue = readFileInt(TP_BAT0_START);
-        if ((this._oldEndValue === this._endValue) && (this._oldStartValue === this._startValue)) {
+        if (this._oldEndValue === this._endValue && this._oldStartValue === this._startValue) {
             this.endLimitValue = this._endValue;
             this.startLimitValue = this._startValue;
             this.emit('threshold-applied', 'success');
@@ -391,7 +391,7 @@ export const ThinkpadLegacySingleBatteryBAT1 = GObject.registerClass({
     _verifyThreshold() {
         this._oldEndValue = readFileInt(TP_BAT1_END);
         this._oldStartValue = readFileInt(TP_BAT1_START);
-        if ((this._oldEndValue === this._endValue) && (this._oldStartValue === this._startValue)) {
+        if (this._oldEndValue === this._endValue && this._oldStartValue === this._startValue) {
             this.endLimitValue = this._endValue;
             this.startLimitValue = this._startValue;
             this.emit('threshold-applied', 'success');

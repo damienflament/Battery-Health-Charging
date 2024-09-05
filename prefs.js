@@ -39,7 +39,7 @@ export default class BatteryHealthChargingPrefs extends ExtensionPreferences {
             if (currentDevice.type === 22 && (settings.get_strv('multiple-configuration-supported').length > 1 ||
                 settings.get_string('configuration-mode') === 'cctk')) // device.type 22 is Dell
                 window.add(new Dell(settings));
-            if (currentDevice.type === 31 && (settings.get_strv('multiple-configuration-supported').length > 1)) // device.type 31 is Framework
+            if (currentDevice.type === 31 && settings.get_strv('multiple-configuration-supported').length > 1) // device.type 31 is Framework
                 window.add(new Framework(settings));
             if (currentDevice.type === 20 || currentDevice.type === 21) // device.type 20|21 is Thinkpad
                 window.add(new Thinkpad(settings));

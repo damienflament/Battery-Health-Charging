@@ -52,8 +52,8 @@ export const  RazerSingleBattery = GObject.registerClass({
         splitOutput = filteredOutput.split('\n');
         firstLine = splitOutput[0].split(' ');
         if (firstLine[0] === 'RES' && firstLine[1] === 'GetBatteryHealthOptimizer' && firstLine[2] === 'is_on') {
-            if (((endValue === 100) && (firstLine[3] === 'false')) ||
-                ((endValue !== 100) && (firstLine[3] === 'true') && (parseInt(firstLine[5]) === endValue))) {
+            if (endValue === 100 && firstLine[3] === 'false' ||
+                endValue !== 100 && firstLine[3] === 'true' && parseInt(firstLine[5]) === endValue) {
                 this.endLimitValue = endValue;
                 this.emit('threshold-applied', 'success');
                 return exitCode.SUCCESS;
@@ -71,17 +71,17 @@ export const  RazerSingleBattery = GObject.registerClass({
         const secondLine = splitOutput[1].split(' ');
         if (firstLine[0] === 'RES' && firstLine[1] === 'SetBatteryHealthOptimizer' &&
             firstLine[2] === 'result' && firstLine[3] === 'true') {
-            if ((endValue === 100 &&
+            if (endValue === 100 &&
                 secondLine[0] === 'Successfully' &&
                 secondLine[1] === 'turned' &&
                 secondLine[2] === 'off' &&
-                secondLine[3] === 'bho') ||
-                (endValue !== 100 &&
+                secondLine[3] === 'bho' ||
+                endValue !== 100 &&
                  secondLine[0] === 'Battery' &&
                  secondLine[1] === 'health' &&
                 secondLine[2] === 'optimization' &&
                 secondLine[4] === 'on' &&
-                parseInt(secondLine[9]) === endValue)) {
+                parseInt(secondLine[9]) === endValue) {
                 this.mode = chargingMode;
                 this.endLimitValue = endValue;
                 this.emit('threshold-applied', 'success');

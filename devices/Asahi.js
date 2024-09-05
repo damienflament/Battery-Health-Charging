@@ -54,7 +54,7 @@ export const AsahiSingleBattery62 = GObject.registerClass({
         if (!fileExists(ASAHI_START_PATH))
             return false;
         const kernelVersion = readFile(KERNEL_VERSION_PATH).trim().split('.', 2);
-        if ((parseInt(kernelVersion[0]) >= 6) && (parseInt(kernelVersion[1]) >= 3))
+        if (parseInt(kernelVersion[0]) >= 6 && parseInt(kernelVersion[1]) >= 3)
             return false;
         return true;
     }
@@ -97,7 +97,7 @@ export const AsahiSingleBattery62 = GObject.registerClass({
     _verifyThreshold() {
         this.endLimitValue = readFileInt(ASAHI_END_PATH);
         this.startLimitValue = readFileInt(ASAHI_START_PATH);
-        if ((this._endValue === this.endLimitValue) && (this._startValue === this.startLimitValue)) {
+        if (this._endValue === this.endLimitValue && this._startValue === this.startLimitValue) {
             this.emit('threshold-applied', 'success');
             return true;
         }
@@ -139,7 +139,7 @@ export const AsahiSingleBattery63 = GObject.registerClass({
         if (!fileExists(ASAHI_START_PATH))
             return false;
         const kernelVersion = readFile(KERNEL_VERSION_PATH).trim().split('.', 2);
-        if ((parseInt(kernelVersion[0]) <= 6) && (parseInt(kernelVersion[1]) <= 2))
+        if (parseInt(kernelVersion[0]) <= 6 && parseInt(kernelVersion[1]) <= 2)
             return false;
         return true;
     }
