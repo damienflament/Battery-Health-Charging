@@ -43,9 +43,6 @@ BHC_DIR="/usr/local/bin"
 RULE_DIR="/etc/polkit-1/rules.d"
 LEGACY_POLKIT=false
 
-COMMAND1_EXIT_STATUS=0
-COMMAND2_EXIT_STATUS=0
-
 EXIT_SUCCESS=0
 EXIT_ERROR=1
 EXIT_NEEDS_UPDATE=2
@@ -111,14 +108,6 @@ function check_installation() {
     exit ${EXIT_SUCCESS}
 }
 
-function exit_modifier() {
-    if [ "$1" -eq 0 ] && [ "$2" -eq 0 ]; then
-        exit ${EXIT_SUCCESS}
-    else
-        exit ${EXIT_ERROR}
-    fi
-}
-
 function validate_path() {
     local TOOLPATH="$1"
     local TOOLNAME="$2"
@@ -145,294 +134,238 @@ case "$TOOLCMD" in
         check_installation
         ;;
     BAT0_END)
-        echo "$ARG1" > "$BAT0_END_PATH"
-        COMMAND1_EXIT_STATUS="$?"
-        exit_modifier "$COMMAND1_EXIT_STATUS" "$COMMAND2_EXIT_STATUS"
+        echo "$ARG1" > "$BAT0_END_PATH" && \
+        exit "$EXIT_SUCCESS" || exit "$EXIT_ERROR"
         ;;
     BAT0_END_START)
-        echo "$ARG1" > "$BAT0_END_PATH"
-        COMMAND1_EXIT_STATUS="$?"
-        echo "$ARG2" > "$BAT0_START_PATH"
-        COMMAND2_EXIT_STATUS="$?"
-        exit_modifier "$COMMAND1_EXIT_STATUS" "$COMMAND2_EXIT_STATUS"
+        echo "$ARG1" > "$BAT0_END_PATH" && \
+        echo "$ARG2" > "$BAT0_START_PATH" && \
+        exit "$EXIT_SUCCESS" || exit "$EXIT_ERROR"
         ;;
     BAT0_START_END)
-        echo "$ARG2" > "$BAT0_START_PATH"
-        COMMAND1_EXIT_STATUS="$?"
-        echo "$ARG1" > "$BAT0_END_PATH"
-        COMMAND2_EXIT_STATUS="$?"
-        exit_modifier "$COMMAND1_EXIT_STATUS" "$COMMAND2_EXIT_STATUS"
+        echo "$ARG2" > "$BAT0_START_PATH" && \
+        echo "$ARG1" > "$BAT0_END_PATH" && \
+        exit "$EXIT_SUCCESS" || exit "$EXIT_ERROR"
         ;;
     BAT1_END)
-        echo "$ARG1" > "$BAT1_END_PATH"
-        COMMAND1_EXIT_STATUS="$?"
-        exit_modifier "$COMMAND1_EXIT_STATUS" "$COMMAND2_EXIT_STATUS"
+        echo "$ARG1" > "$BAT1_END_PATH" && \
+        exit "$EXIT_SUCCESS" || exit "$EXIT_ERROR"
         ;;
     BAT1_END_START)
-        echo "$ARG1" > "$BAT1_END_PATH"
-        COMMAND1_EXIT_STATUS="$?"
-        echo "$ARG2" > "$BAT1_START_PATH"
-        COMMAND2_EXIT_STATUS="$?"
-        exit_modifier "$COMMAND1_EXIT_STATUS" "$COMMAND2_EXIT_STATUS"
+        echo "$ARG1" > "$BAT1_END_PATH" && \
+        echo "$ARG2" > "$BAT1_START_PATH" && \
+        exit "$EXIT_SUCCESS" || exit "$EXIT_ERROR"
         ;;
     BAT1_START_END)
-        echo "$ARG2" > "$BAT1_START_PATH"
-        COMMAND1_EXIT_STATUS="$?"
-        echo "$ARG1" > "$BAT1_END_PATH"
-        COMMAND2_EXIT_STATUS="$?"
-        exit_modifier "$COMMAND1_EXIT_STATUS" "$COMMAND2_EXIT_STATUS"
+        echo "$ARG2" > "$BAT1_START_PATH" && \
+        echo "$ARG1" > "$BAT1_END_PATH" && \
+        exit "$EXIT_SUCCESS" || exit "$EXIT_ERROR"
         ;;
     LG)
-        echo "$ARG1" > "$LG_PATH"
-        COMMAND1_EXIT_STATUS="$?"
-        exit_modifier "$COMMAND1_EXIT_STATUS" "$COMMAND2_EXIT_STATUS"
+        echo "$ARG1" > "$LG_PATH" && \
+        exit "$EXIT_SUCCESS" || exit "$EXIT_ERROR"
         ;;
     LENOVO)
-        echo "$ARG1" > "$LENOVO_PATH"
-        COMMAND1_EXIT_STATUS="$?"
-        exit_modifier "$COMMAND1_EXIT_STATUS" "$COMMAND2_EXIT_STATUS"
+        echo "$ARG1" > "$LENOVO_PATH" && \
+        exit "$EXIT_SUCCESS" || exit "$EXIT_ERROR"
         ;;
     SONY)
-        if [ "$ARG2" == "on" ];then
-            echo "1" > "$SONY_HIGHSPEED_CHARGING_PATH"
-            COMMAND1_EXIT_STATUS="$?"
-        elif [ "$ARG2" == "off" ];then
-            echo "0" > "$SONY_HIGHSPEED_CHARGING_PATH"
-            COMMAND1_EXIT_STATUS="$?"
-        fi
-        echo "$ARG1" > "$SONY_PATH"
-        COMMAND2_EXIT_STATUS="$?"
-        exit_modifier "$COMMAND1_EXIT_STATUS" "$COMMAND2_EXIT_STATUS"
+        {
+            if [ "$ARG2" == "on" ]; then
+                echo "1" > "$SONY_HIGHSPEED_CHARGING_PATH"
+            elif [ "$ARG2" == "off" ]; then
+                echo "0" > "$SONY_HIGHSPEED_CHARGING_PATH"
+            fi
+        } && \
+        echo "$ARG1" > "$SONY_PATH" && \
+        exit "$EXIT_SUCCESS" || exit "$EXIT_ERROR"
         ;;
     HUAWEI)
-        echo "$ARG2 $ARG1" > "$HUAWEI_PATH"
-        COMMAND1_EXIT_STATUS="$?"
-        exit_modifier "$COMMAND1_EXIT_STATUS" "$COMMAND2_EXIT_STATUS"
+        echo "$ARG2 $ARG1" > "$HUAWEI_PATH" && \
+        exit "$EXIT_SUCCESS" || exit "$EXIT_ERROR"
         ;;
     SAMSUNG)
-        echo "$ARG1" > "$SAMSUNG_PATH"
-        COMMAND1_EXIT_STATUS="$?"
-        exit_modifier "$COMMAND1_EXIT_STATUS" "$COMMAND2_EXIT_STATUS"
+        echo "$ARG1" > "$SAMSUNG_PATH" && \
+        exit "$EXIT_SUCCESS" || exit "$EXIT_ERROR"
         ;;
     ACER)
-        echo "$ARG1" > "$ACER_PATH"
-        COMMAND1_EXIT_STATUS="$?"
-        exit_modifier "$COMMAND1_EXIT_STATUS" "$COMMAND2_EXIT_STATUS"
+        echo "$ARG1" > "$ACER_PATH" && \
+        exit "$EXIT_SUCCESS" || exit "$EXIT_ERROR"
         ;;
     PANASONIC)
-        echo "$ARG1" > "$PANASONIC_PATH"
-        COMMAND1_EXIT_STATUS="$?"
-        exit_modifier "$COMMAND1_EXIT_STATUS" "$COMMAND2_EXIT_STATUS"
+        echo "$ARG1" > "$PANASONIC_PATH" && \
+        exit "$EXIT_SUCCESS" || exit "$EXIT_ERROR"
         ;;
     BATC_END)
-        echo "$ARG1" > "$BATC_END_PATH"
-        COMMAND1_EXIT_STATUS="$?"
-        exit_modifier "$COMMAND1_EXIT_STATUS" "$COMMAND2_EXIT_STATUS"
+        echo "$ARG1" > "$BATC_END_PATH" && \
+        exit "$EXIT_SUCCESS" || exit "$EXIT_ERROR"
         ;;
     BATT_END)
-        echo "$ARG1" > "$BATT_END_PATH"
-        COMMAND1_EXIT_STATUS="$?"
-        exit_modifier "$COMMAND1_EXIT_STATUS" "$COMMAND2_EXIT_STATUS"
+        echo "$ARG1" > "$BATT_END_PATH" && \
+        exit "$EXIT_SUCCESS" || exit "$EXIT_ERROR"
         ;;
     TP_BAT0_END_START)
-        echo "$ARG1" > "$TP_BAT0_END"
-        COMMAND1_EXIT_STATUS="$?"
-        echo "$ARG2" > "$TP_BAT0_START"
-        COMMAND2_EXIT_STATUS="$?"
-        exit_modifier "$COMMAND1_EXIT_STATUS" "$COMMAND2_EXIT_STATUS"
+        echo "$ARG1" > "$TP_BAT0_END" && \
+        echo "$ARG2" > "$TP_BAT0_START" && \
+        exit "$EXIT_SUCCESS" || exit "$EXIT_ERROR"
         ;;
     TP_BAT0_START_END)
-        echo "$ARG2" > "$TP_BAT0_START"
-        COMMAND1_EXIT_STATUS="$?"
-        echo "$ARG1" > "$TP_BAT0_END"
-        COMMAND2_EXIT_STATUS="$?"
-        exit_modifier "$COMMAND1_EXIT_STATUS" "$COMMAND2_EXIT_STATUS"
+        echo "$ARG2" > "$TP_BAT0_START" && \
+        echo "$ARG1" > "$TP_BAT0_END" && \
+        exit "$EXIT_SUCCESS" || exit "$EXIT_ERROR"
         ;;
     TP_BAT1_END_START)
-        echo "$ARG1" > "$TP_BAT1_END"
-        COMMAND1_EXIT_STATUS="$?"
-        echo "$ARG2" > "$TP_BAT1_START"
-        COMMAND2_EXIT_STATUS="$?"
-        exit_modifier "$COMMAND1_EXIT_STATUS" "$COMMAND2_EXIT_STATUS"
+        echo "$ARG1" > "$TP_BAT1_END" && \
+        echo "$ARG2" > "$TP_BAT1_START" && \
+        exit "$EXIT_SUCCESS" || exit "$EXIT_ERROR"
         ;;
     TP_BAT1_START_END)
-        echo "$ARG2" > "$TP_BAT1_START"
-        COMMAND1_EXIT_STATUS="$?"
-        echo "$ARG1" > "$TP_BAT1_END"
-        COMMAND2_EXIT_STATUS="$?"
-        exit_modifier "$COMMAND1_EXIT_STATUS" "$COMMAND2_EXIT_STATUS"
+        echo "$ARG2" > "$TP_BAT1_START" && \
+        echo "$ARG1" > "$TP_BAT1_END" && \
+        exit "$EXIT_SUCCESS" || exit "$EXIT_ERROR"
         ;;
     ASAHI_END_START)
-        echo "$ARG1" > "$ASAHI_END_PATH"
-        COMMAND1_EXIT_STATUS="$?"
-        echo "$ARG2" > "$ASAHI_START_PATH"
-        COMMAND2_EXIT_STATUS="$?"
-        exit_modifier "$COMMAND1_EXIT_STATUS" "$COMMAND2_EXIT_STATUS"
+        echo "$ARG1" > "$ASAHI_END_PATH" && \
+        echo "$ARG2" > "$ASAHI_START_PATH" && \
+        exit "$EXIT_SUCCESS" || exit "$EXIT_ERROR"
         ;;
     TUXEDO)
-        echo "$ARG1" > "$TUXEDO_PATH"
-        COMMAND1_EXIT_STATUS="$?"
-        exit_modifier "$COMMAND1_EXIT_STATUS" "$COMMAND2_EXIT_STATUS"
+        echo "$ARG1" > "$TUXEDO_PATH" && \
+        exit "$EXIT_SUCCESS" || exit "$EXIT_ERROR"
         ;;
     GIGABYTE_THRESHOLD)
-        if [ "$ARG1" = "true" ];then
-            echo "1" > "$GIGABYTE_MODE"
-            COMMAND1_EXIT_STATUS="$?"
-        fi
-        echo "$ARG2" > "$GIGABYTE_LIMIT"
-        COMMAND2_EXIT_STATUS="$?"
-        exit_modifier "$COMMAND1_EXIT_STATUS" "$COMMAND2_EXIT_STATUS"
+        {
+            if [ "$ARG1" = "true" ]; then
+                echo "1" > "$GIGABYTE_MODE"
+            fi
+        } && \
+        echo "$ARG2" > "$GIGABYTE_LIMIT" && \
+        exit "$EXIT_SUCCESS" || exit "$EXIT_ERROR"
         ;;
     DELL_ABSOLUTE_SMBIOS_BAT_READ)
-        "$DELL_SMBIOS_PATH" --get-charging-cfg
-        COMMAND1_EXIT_STATUS="$?"
-        exit_modifier "$COMMAND1_EXIT_STATUS" "$COMMAND2_EXIT_STATUS"
+        "$DELL_SMBIOS_PATH" --get-charging-cfg && \
+        exit "$EXIT_SUCCESS" || exit "$EXIT_ERROR"
         ;;
     DELL_ABSOLUTE_SMBIOS_BAT_WRITE)
-        if [ "$ARG1" = "adv" ];then
-            "$DELL_SMBIOS_PATH" --set-charging-mode='adaptive'
-            COMMAND1_EXIT_STATUS="$?"
-        elif [ "$ARG1" = "exp" ];then
-            "$DELL_SMBIOS_PATH" --set-charging-mode='express'
-            COMMAND1_EXIT_STATUS="$?"
-        else
-            "$DELL_SMBIOS_PATH" --set-charging-mode='custom'
-            COMMAND1_EXIT_STATUS="$?"
-            "$DELL_SMBIOS_PATH" --set-custom-charge-interval="$ARG2" "$ARG1"
-            COMMAND2_EXIT_STATUS="$?"
-        fi
-        exit_modifier "$COMMAND1_EXIT_STATUS" "$COMMAND2_EXIT_STATUS"
+        {
+            if [ "$ARG1" = "adv" ];then
+                "$DELL_SMBIOS_PATH" --set-charging-mode='adaptive'
+            elif [ "$ARG1" = "exp" ];then
+                "$DELL_SMBIOS_PATH" --set-charging-mode='express'
+            else
+                "$DELL_SMBIOS_PATH" --set-charging-mode='custom' && \
+                "$DELL_SMBIOS_PATH" --set-custom-charge-interval="$ARG2" "$ARG1"
+            fi
+        } && \
+        exit "$EXIT_SUCCESS" || exit "$EXIT_ERROR"
         ;;
     DELL_ABSOLUTE_CCTK_BAT_READ)
-        "$DELL_CCTK_PATH" --PrimaryBattChargeCfg
-        COMMAND1_EXIT_STATUS="$?"
-        exit_modifier "$COMMAND1_EXIT_STATUS" "$COMMAND2_EXIT_STATUS"
+        "$DELL_CCTK_PATH" --PrimaryBattChargeCfg && \
+        exit "$EXIT_SUCCESS" || exit "$EXIT_ERROR"
         ;;
     DELL_ABSOLUTE_CCTK_BAT_WRITE)
-        if [ "$ARG1" = "adv" ];then
-            "$DELL_CCTK_PATH" --PrimaryBattChargeCfg=Adaptive
-            COMMAND1_EXIT_STATUS="$?"
-        elif [ "$ARG1" = "exp" ];then
-            "$DELL_CCTK_PATH" --PrimaryBattChargeCfg=Express
-            COMMAND1_EXIT_STATUS="$?"
-        else
-            "$DELL_CCTK_PATH" --PrimaryBattChargeCfg=Custom:"$ARG2"-"$ARG1"
-            COMMAND1_EXIT_STATUS="$?"
-        fi
-        exit_modifier "$COMMAND1_EXIT_STATUS" "$COMMAND2_EXIT_STATUS"
+        {
+            if [ "$ARG1" = "adv" ];then
+               "$DELL_CCTK_PATH" --PrimaryBattChargeCfg=Adaptive
+            elif [ "$ARG1" = "exp" ];then
+                "$DELL_CCTK_PATH" --PrimaryBattChargeCfg=Express
+            else
+                "$DELL_CCTK_PATH" --PrimaryBattChargeCfg=Custom:"$ARG2"-"$ARG1"
+            fi
+        } && \
+        exit "$EXIT_SUCCESS" || exit "$EXIT_ERROR"
         ;;
     DELL_ABSOLUTE_CCTK_PASSWORD_BAT_WRITE)
-        if [ "$ARG1" = "adv" ];then
-            "$DELL_CCTK_PATH" --ValSetupPwd="$ARG3" --PrimaryBattChargeCfg=Adaptive
-            COMMAND1_EXIT_STATUS="$?"
-        elif [ "$ARG1" = "exp" ];then
-            "$DELL_CCTK_PATH" --ValSetupPwd="$ARG3" --PrimaryBattChargeCfg=Express
-            COMMAND1_EXIT_STATUS="$?"
-        else
-            "$DELL_CCTK_PATH" --ValSetupPwd="$ARG3" --PrimaryBattChargeCfg=Custom:"$ARG2"-"$ARG1"
-            COMMAND1_EXIT_STATUS="$?"
-        fi
-        exit_modifier "$COMMAND1_EXIT_STATUS" "$COMMAND2_EXIT_STATUS"
+        {
+            if [ "$ARG1" = "adv" ];then
+               "$DELL_CCTK_PATH" --ValSetupPwd="$ARG3" --PrimaryBattChargeCfg=Adaptive
+            elif [ "$ARG1" = "exp" ];then
+                "$DELL_CCTK_PATH" --ValSetupPwd="$ARG3" --PrimaryBattChargeCfg=Express
+            else
+                "$DELL_CCTK_PATH" --ValSetupPwd="$ARG3" --PrimaryBattChargeCfg=Custom:"$ARG2"-"$ARG1"
+            fi
+        } && \
+        exit "$EXIT_SUCCESS" || exit "$EXIT_ERROR"
         ;;
     APPLE)
-        echo "$ARG1" > "$BAT0_END_PATH"
-        COMMAND1_EXIT_STATUS="$?"
-        if [ "$ARG2" -ne 0 ];then
-            echo "$ARG2" > "$APPLE_CHARGING_LED_PATH"
-            COMMAND2_EXIT_STATUS="$?"
-        fi
-        exit_modifier "$COMMAND1_EXIT_STATUS" "$COMMAND2_EXIT_STATUS"
+        echo "$ARG1" > "$BAT0_END_PATH" && \
+        {
+            if [ "$ARG2" -ne 0 ];then
+              echo "$ARG2" > "$APPLE_CHARGING_LED_PATH"
+            fi
+        } && \
+        exit "$EXIT_SUCCESS" || exit "$EXIT_ERROR"
         ;;
     FORCE_DISCHARGE_BAT0)
-        echo "$ARG1" > "$BAT0_FORCE_DISCHARGE_PATH"
-        COMMAND1_EXIT_STATUS="$?"
-        exit_modifier "$COMMAND1_EXIT_STATUS" "$COMMAND2_EXIT_STATUS"
+        echo "$ARG1" > "$BAT0_FORCE_DISCHARGE_PATH" && \
+        exit "$EXIT_SUCCESS" || exit "$EXIT_ERROR"
         ;;
     FORCE_DISCHARGE_BAT1)
-        echo "$ARG1" > "$BAT1_FORCE_DISCHARGE_PATH"
-        COMMAND1_EXIT_STATUS="$?"
-        exit_modifier "$COMMAND1_EXIT_STATUS" "$COMMAND2_EXIT_STATUS"
+        echo "$ARG1" > "$BAT1_FORCE_DISCHARGE_PATH" && \
+        exit "$EXIT_SUCCESS" || exit "$EXIT_ERROR"
         ;;
     DELL_RELATIVE_SMBIOS_BAT_READ)
-        smbios-battery-ctl --get-charging-cfg
-        COMMAND1_EXIT_STATUS="$?"
-        exit_modifier "$COMMAND1_EXIT_STATUS" "$COMMAND2_EXIT_STATUS"
+        smbios-battery-ctl --get-charging-cfg && \
+        exit "$EXIT_SUCCESS" || exit "$EXIT_ERROR"
         ;;
     DELL_RELATIVE_SMBIOS_BAT_WRITE)
-        if [ "$ARG1" = "adv" ];then
-            smbios-battery-ctl --set-charging-mode='adaptive'
-            COMMAND1_EXIT_STATUS="$?"
-        elif [ "$ARG1" = "exp" ];then
-            smbios-battery-ctl --set-charging-mode='express'
-            COMMAND1_EXIT_STATUS="$?"
-        else
-            smbios-battery-ctl --set-charging-mode='custom'
-            COMMAND1_EXIT_STATUS="$?"
+        {
+            if [ "$ARG1" = "adv" ];then
+                smbios-battery-ctl --set-charging-mode='adaptive'
+            elif [ "$ARG1" = "exp" ];then
+                smbios-battery-ctl --set-charging-mode='express'
+            else
+            smbios-battery-ctl --set-charging-mode='custom' && \
             smbios-battery-ctl --set-custom-charge-interval="$ARG2" "$ARG1"
-            COMMAND2_EXIT_STATUS="$?"
-        fi
-        exit_modifier "$COMMAND1_EXIT_STATUS" "$COMMAND2_EXIT_STATUS"
+            fi
+        } && \
+        exit "$EXIT_SUCCESS" || exit "$EXIT_ERROR"
         ;;
     DELL_RELATIVE_CCTK_BAT_READ)
-        cctk --PrimaryBattChargeCfg
-        COMMAND1_EXIT_STATUS="$?"
-        exit_modifier "$COMMAND1_EXIT_STATUS" "$COMMAND2_EXIT_STATUS"
+        cctk --PrimaryBattChargeCfg && \
+        exit "$EXIT_SUCCESS" || exit "$EXIT_ERROR"
         ;;
     DELL_RELATIVE_CCTK_BAT_WRITE)
-        if [ "$ARG1" = "adv" ];then
-            cctk --PrimaryBattChargeCfg=Adaptive
-            COMMAND1_EXIT_STATUS="$?"
-        elif [ "$ARG1" = "exp" ];then
-            cctk --PrimaryBattChargeCfg=Express
-            COMMAND1_EXIT_STATUS="$?"
-        else
-            cctk --PrimaryBattChargeCfg=Custom:"$ARG2"-"$ARG1"
-            COMMAND1_EXIT_STATUS="$?"
-        fi
-        exit_modifier "$COMMAND1_EXIT_STATUS" "$COMMAND2_EXIT_STATUS"
+        {
+            if [ "$ARG1" = "adv" ];then
+                cctk --PrimaryBattChargeCfg=Adaptive
+            elif [ "$ARG1" = "exp" ];then
+                cctk --PrimaryBattChargeCfg=Express
+            else
+                cctk --PrimaryBattChargeCfg=Custom:"$ARG2"-"$ARG1"
+            fi
+        } && \
+        exit "$EXIT_SUCCESS" || exit "$EXIT_ERROR"
         ;;
     DELL_RELATIVE_CCTK_PASSWORD_BAT_WRITE)
-        if [ "$ARG1" = "adv" ];then
-            cctk --ValSetupPwd="$ARG3" --PrimaryBattChargeCfg=Adaptive
-            COMMAND1_EXIT_STATUS="$?"
-        elif [ "$ARG1" = "exp" ];then
-            cctk --ValSetupPwd="$ARG3" --PrimaryBattChargeCfg=Express
-            COMMAND1_EXIT_STATUS="$?"
-        else
-            cctk --ValSetupPwd="$ARG3" --PrimaryBattChargeCfg=Custom:"$ARG2"-"$ARG1"
-            COMMAND1_EXIT_STATUS="$?"
-        fi
-        exit_modifier "$COMMAND1_EXIT_STATUS" "$COMMAND2_EXIT_STATUS"
+        {
+            if [ "$ARG1" = "adv" ];then
+                cctk --ValSetupPwd="$ARG3" --PrimaryBattChargeCfg=Adaptive
+            elif [ "$ARG1" = "exp" ];then
+                cctk --ValSetupPwd="$ARG3" --PrimaryBattChargeCfg=Express
+            else
+                cctk --ValSetupPwd="$ARG3" --PrimaryBattChargeCfg=Custom:"$ARG2"-"$ARG1"
+            fi
+        } && \
+        exit "$EXIT_SUCCESS" || exit "$EXIT_ERROR"
         ;;
     CMB0_END)
-        echo "$ARG1" > "$CMB0_END_PATH"
-        COMMAND1_EXIT_STATUS="$?"
-        exit_modifier "$COMMAND1_EXIT_STATUS" "$COMMAND2_EXIT_STATUS"
+        echo "$ARG1" > "$CMB0_END_PATH" && \
+        exit "$EXIT_SUCCESS" || exit "$EXIT_ERROR"
         ;;
     CMB1_END)
-        echo "$ARG1" > "$CMB1_END_PATH"
-        COMMAND1_EXIT_STATUS="$?"
-        exit_modifier "$COMMAND1_EXIT_STATUS" "$COMMAND2_EXIT_STATUS"
+        echo "$ARG1" > "$CMB1_END_PATH" && \
+        exit "$EXIT_SUCCESS" || exit "$EXIT_ERROR"
         ;;
     FRAMEWORK_TOOL_THRESHOLD_READ)
-        validate_path "$ARG1" "/framework_tool"
-        if [[ $? -eq 0 ]]; then
-            "$ARG1" --driver "$ARG2" --charge-limit
-            COMMAND1_EXIT_STATUS="$?"
-            exit_modifier "$COMMAND1_EXIT_STATUS" "$COMMAND2_EXIT_STATUS"
-        else
-            exit ${EXIT_ERROR}
-        fi
+        validate_path "$ARG1" "/framework_tool" && \
+        "$ARG1" --driver "$ARG2" --charge-limit && \
+        exit "$EXIT_SUCCESS" || exit "$EXIT_ERROR"
         ;;
     FRAMEWORK_TOOL_THRESHOLD_WRITE)
-        validate_path "$ARG1" "/framework_tool"
-        if [[ $? -eq 0 ]]; then
-            "$ARG1" --driver "$ARG2" --charge-limit "$ARG3"
-            COMMAND1_EXIT_STATUS="$?"
-            exit_modifier "$COMMAND1_EXIT_STATUS" "$COMMAND2_EXIT_STATUS"
-        else
-            exit ${EXIT_ERROR}
-        fi
+        validate_path "$ARG1" "/framework_tool" && \
+        "$ARG1" --driver "$ARG2" --charge-limit "$ARG3" && \
+        exit "$EXIT_SUCCESS" || exit "$EXIT_ERROR"
         ;;
     *)
         echo "Unknown Command"
