@@ -7,6 +7,7 @@ import * as Helper from '../lib/helper.js';
 const {exitCode, fileExists, findValidProgramInPath, readFileInt, readFile, runCommandCtl} = Helper;
 
 const BAT1_END_PATH = '/sys/class/power_supply/BAT1/charge_control_end_threshold';
+const FRAMEWORK_TOOL_PATH = '/usr/bin/framework_tool';
 const CROS_EC_PATH = '/dev/cros_ec';
 
 export const FrameworkSingleBatteryBAT1 = GObject.registerClass({
@@ -44,15 +45,24 @@ export const FrameworkSingleBatteryBAT1 = GObject.registerClass({
         if (!readFile('/sys/devices/virtual/dmi/id/sys_vendor').includes('Framework'))
             return false;
 
-        this._hasSysfsNode = fileExists(BAT1_END_PATH);
-        this._frameworkToolPath = findValidProgramInPath('framework_tool');
-        this._hasFrameworkTool = !!this._frameworkToolPath;
+        this._supportedConfiguration = [];
 
-        if (!this._hasSysfsNode && !this._hasFrameworkTool)
+        const hasSysfsNode = fileExists(BAT1_END_PATH);
+        if (hasSysfsNode)
+            this._supportedConfiguration.push('sysfs');
+
+        this._frameworkToolPath = findValidProgramInPath('framework_tool');
+        if (this._frameworkToolPath === null)
+            this._frameworkToolPath = fileExists(FRAMEWORK_TOOL_PATH) ? FRAMEWORK_TOOL_PATH : null;
+        if (this._frameworkToolPath)
+            this._supportedConfiguration.push('framework-tool');
+
+        if (this._supportedConfiguration.length <= 0)
             return false;
 
-        this._settings.set_boolean('detected-framework-sysfs', this._hasSysfsNode);
-        this._settings.set_boolean('detected-framework-tool', this._hasFrameworkTool);
+        this._settings.set_strv('multiple-configuration-supported', this._supportedConfiguration);
+        if (this._supportedConfiguration.length === 1)
+            this._settings.set_string('configuration-mode', this._supportedConfiguration[0]);
         return true;
     }
 
@@ -60,22 +70,33 @@ export const FrameworkSingleBatteryBAT1 = GObject.registerClass({
         let status;
         this._endValue = this._settings.get_int(`current-${chargingMode}-end-threshold`);
 
-        if (this._hasSysfsNode && this._hasFrameworkTool) {
-            const frameworkApplyThresholdMode = this._settings.get_int('framework-apply-threshold-mode');
-            if (frameworkApplyThresholdMode === 0)
-                status = await this._setThresholdLimitSysFs();
-            else if (frameworkApplyThresholdMode === 1)
-                status = await this._setThresholdFrameworkTool();
-        } else if (this._hasSysfsNode) {
-            status = await this._setThresholdLimitSysFs();
-        } else if (this._hasFrameworkTool) {
-            status = await this._setThresholdFrameworkTool();
+        if (this._supportedConfiguration.length === 1) {
+            const config = this._supportedConfiguration[0];
+            status = await this._executeThresholdFunction(config);
+        } else if (this._supportedConfiguration.length > 1) {
+            const mode = this._settings.get_string('configuration-mode');
+            if (this._supportedConfiguration.includes(mode)) {
+                status = await this._executeThresholdFunction(mode);
+            } else {
+                const fallbackConfig = this._supportedConfiguration[0];
+                this._settings.set_string('configuration-mode', fallbackConfig);
+                status = await this._executeThresholdFunction(fallbackConfig);
+            }
         }
         return status;
     }
 
+    async _executeThresholdFunction(config) {
+        let status;
+        if (config === 'sysfs')
+            status = await this._setThresholdLimitSysFs();
+        else if (config === 'framework-tool')
+            status = await this._setThresholdFrameworkTool();
+        return status;
+    }
+
     async _setThresholdLimitSysFs() {
-        if (this._verifyThreshold())
+        if (this._verifySysFsThreshold())
             return exitCode.SUCCESS;
 
         const [status] = await runCommandCtl(this.ctlPath, 'BAT1_END', `${this._endValue}`);
@@ -84,7 +105,7 @@ export const FrameworkSingleBatteryBAT1 = GObject.registerClass({
             return exitCode.ERROR;
         }
 
-        if (this._verifyThreshold())
+        if (this._verifySysFsThreshold())
             return exitCode.SUCCESS;
 
         if (this._delayReadTimeoutId)
@@ -99,14 +120,14 @@ export const FrameworkSingleBatteryBAT1 = GObject.registerClass({
         });
         this._delayReadTimeoutId = null;
 
-        if (this._verifyThreshold())
+        if (this._verifySysFsThreshold())
             return exitCode.SUCCESS;
 
         this.emit('threshold-applied', 'failed');
         return exitCode.ERROR;
     }
 
-    _verifyThreshold() {
+    _verifySysFsThreshold() {
         this.endLimitValue = readFileInt(BAT1_END_PATH);
         if (this._endValue === this.endLimitValue) {
             this.emit('threshold-applied', 'success');

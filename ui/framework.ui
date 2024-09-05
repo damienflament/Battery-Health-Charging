@@ -9,8 +9,8 @@
         <property name="title" translatable="yes">Device settings</property>
         <child>
           <object class="AdwActionRow">
-            <property name="title" translatable="yes">Framework charging mode configuration</property>
-            <property name="subtitle" translatable="yes">Select the method used to change the charging threshold.</property>
+            <property name="title" translatable="yes">Select configuration for charging mode</property>
+            <property name="subtitle" translatable="yes">Select configuration used for changing charging mode/threshold.</property>
             <property name="activatable-widget">choose_configuration</property>
             <child>
               <object class="GtkDropDown" id="choose_configuration">
@@ -23,10 +23,4 @@
       </object>
     </child>
   </template>
-  <object class="GtkStringList" id="choose_configuration_model">
-    <items>
-      <item translatable="yes">Sysfs Node</item>
-      <item translatable="yes">Framework Tool</item>
-    </items>
-  </object>
 </interface>

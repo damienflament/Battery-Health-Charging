@@ -229,20 +229,5 @@
             <default>false</default>
             <summary>Skip threshold verification</summary>
         </key>
-
-        <!-- Framework -->
-        <key name="detected-framework-sysfs" type="b">
-            <default>false</default>
-            <summary>Detected frameworks threshold sysfs</summary>
-        </key>
-        <key name="detected-framework-tool" type="b">
-            <default>false</default>
-            <summary>Detected frameworks tool package</summary>
-        </key>
-        <key name="framework-apply-threshold-mode" type="i">
-            <default>0</default>
-            <summary>Framework mode selection 0:sysfs 1:framework_tool</summary>
-        </key>
-
     </schema>
 </schemalist>

@@ -1,7 +1,7 @@
 'use strict';
 import Adw from 'gi://Adw';
-import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
+import Gtk from 'gi://Gtk';
 import GObject from 'gi://GObject';
 
 export const Framework = GObject.registerClass({
@@ -15,11 +15,25 @@ export const Framework = GObject.registerClass({
     constructor(settings) {
         super({});
         this._settings = settings;
-        this._settings.bind(
-            'framework-apply-threshold-mode',
-            this._choose_configuration,
-            'selected',
-            Gio.SettingsBindFlags.DEFAULT
-        );
+        const configurationMapping = {
+            'sysfs': 'Sysfs node',
+            'framework-tool': 'Framework Tool',
+        };
+
+        const supportedConfigs = this._settings.get_strv('multiple-configuration-supported');
+        const displayNames = supportedConfigs.map(config => configurationMapping[config]);
+        const stringList = new Gtk.StringList();
+        displayNames.forEach(name => stringList.append(name));
+        this._choose_configuration.set_model(stringList);
+        const currentConfigMode = this._settings.get_string('configuration-mode');
+        const initialSelectedIndex = supportedConfigs.indexOf(currentConfigMode);
+        if (initialSelectedIndex !== -1)
+            this._choose_package.set_selected(initialSelectedIndex);
+
+        this._choose_configuration.connect('notify::selected-item', () => {
+            const selectedIndex = this._choose_configuration.get_selected();
+            const selectedConfig = supportedConfigs[selectedIndex];
+            this._settings.set_string('configuration-mode', selectedConfig);
+        });
     }
 });
