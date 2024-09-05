@@ -183,7 +183,7 @@ export const General = GObject.registerClass({
             user,
             action,
         ];
-        const [status, output] = await execCheck(argv);
+        const [status, output] = await execCheck(argv, false);
         log(`Battery Health Charging: stdout = ${output}`);
         log(`Battery Health Charging: status = ${status}`);
         const toast = new Adw.Toast();
