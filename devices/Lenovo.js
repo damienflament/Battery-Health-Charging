@@ -45,7 +45,7 @@ export const LenovoSingleBattery = GObject.registerClass({
         if (this._verifyThreshold())
             return exitCode.SUCCESS;
 
-        const [status] = await runCommandCtl(this.ctlPath, 'LENOVO', `${this._conservationMode}`, null, null);
+        const [status] = await runCommandCtl(this.ctlPath, 'LENOVO', `${this._conservationMode}`);
         if (status === exitCode.ERROR) {
             this.emit('threshold-applied', 'failed');
             return exitCode.ERROR;

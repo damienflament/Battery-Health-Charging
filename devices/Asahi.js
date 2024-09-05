@@ -66,7 +66,7 @@ export const AsahiSingleBattery62 = GObject.registerClass({
         if (this._verifyThreshold())
             return exitCode.SUCCESS;
 
-        const [status] = await runCommandCtl(this.ctlPath, 'ASAHI_END_START', `${this._endValue}`, `${this._startValue}`, null);
+        const [status] = await runCommandCtl(this.ctlPath, 'ASAHI_END_START', `${this._endValue}`, `${this._startValue}`);
         if (status === exitCode.ERROR) {
             this.emit('threshold-applied', 'failed');
             return exitCode.ERROR;
@@ -157,7 +157,7 @@ export const AsahiSingleBattery63 = GObject.registerClass({
         if (this._verifyThreshold())
             return exitCode.SUCCESS;
 
-        const [status] = await runCommandCtl(this.ctlPath, 'ASAHI_END_START', `${this._endValue}`, `${this._startValue}`, null);
+        const [status] = await runCommandCtl(this.ctlPath, 'ASAHI_END_START', `${this._endValue}`, `${this._startValue}`);
         if (status === exitCode.ERROR) {
             this.emit('threshold-applied', 'failed');
             return exitCode.ERROR;

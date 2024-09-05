@@ -55,7 +55,7 @@ export const MsiSingleBatteryBAT0 = GObject.registerClass({
         if (this._verifyThreshold())
             return exitCode.SUCCESS;
 
-        const [status] = await runCommandCtl(this.ctlPath, 'BAT0_END', `${this._endValue}`, null, null);
+        const [status] = await runCommandCtl(this.ctlPath, 'BAT0_END', `${this._endValue}`);
         if (status === exitCode.ERROR) {
             this.emit('threshold-applied', 'failed');
             return exitCode.ERROR;
@@ -144,7 +144,7 @@ export const MsiSingleBatteryBAT1 = GObject.registerClass({
         if (this._verifyThreshold())
             return exitCode.SUCCESS;
 
-        const [status] = await runCommandCtl(this.ctlPath, 'BAT1_END', `${this._endValue}`, null, null);
+        const [status] = await runCommandCtl(this.ctlPath, 'BAT1_END', `${this._endValue}`);
         if (status === exitCode.ERROR) {
             this.emit('threshold-applied', 'failed');
             return exitCode.ERROR;

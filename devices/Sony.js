@@ -68,7 +68,7 @@ export const SonySingleBattery = GObject.registerClass({
                 highSpeedCharging = 'off';
         }
 
-        const [status] = await runCommandCtl(this.ctlPath, 'SONY', `${this._batteryCareLimiter}`, highSpeedCharging, null);
+        const [status] = await runCommandCtl(this.ctlPath, 'SONY', `${this._batteryCareLimiter}`, highSpeedCharging);
         if (status === exitCode.ERROR) {
             this.emit('threshold-applied', 'failed');
             return exitCode.ERROR;

@@ -116,7 +116,7 @@ export const DellSmBiosSingleBattery = GObject.registerClass({
             arg2 = `${this._startValue}`;
         }
 
-        await runCommandCtl(this.ctlPath, this._writeSmbiosCmd, arg1, arg2, null);
+        await runCommandCtl(this.ctlPath, this._writeSmbiosCmd, arg1, arg2);
         verified = await this._verifySmbiosThreshold();
         if (verified)
             return exitCode.SUCCESS;
@@ -125,7 +125,7 @@ export const DellSmBiosSingleBattery = GObject.registerClass({
     }
 
     async _verifySmbiosThreshold() {
-        const [, output] = await runCommandCtl(this.ctlPath, this._readSmbiosCmd, null, null, null);
+        const [, output] = await runCommandCtl(this.ctlPath, this._readSmbiosCmd);
         const filteredOutput = output.trim().replace('(', '').replace(')', '').replace(',', '').replace(/:/g, '');
         const splitOutput = filteredOutput.split('\n');
         const firstLine = splitOutput[0].split(' ');
@@ -214,7 +214,7 @@ export const DellSmBiosSingleBattery = GObject.registerClass({
     }
 
     async _verifyCctkThreshold() {
-        const [, output] = await runCommandCtl(this.ctlPath, this._readCctkCmd, null, null, null);
+        const [, output] = await runCommandCtl(this.ctlPath, this._readCctkCmd);
         const filteredOutput = output.trim().replace('=', ' ').replace(':', ' ').replace('-', ' ');
         const splitOutput = filteredOutput.split(' ');
         if (splitOutput[0] === 'PrimaryBattChargeCfg') {

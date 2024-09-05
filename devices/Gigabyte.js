@@ -55,7 +55,7 @@ export const GigabyteSingleBattery = GObject.registerClass({
         if (this._verifyThreshold())
             return exitCode.SUCCESS;
 
-        const [status] = await runCommandCtl(this.ctlPath, 'GIGABYTE_THRESHOLD', this._updateMode, `${this._endValue}`, null);
+        const [status] = await runCommandCtl(this.ctlPath, 'GIGABYTE_THRESHOLD', this._updateMode, `${this._endValue}`);
         if (status === exitCode.ERROR) {
             this.emit('threshold-applied', 'failed');
             return exitCode.ERROR;

@@ -45,7 +45,7 @@ export const PanasonicSingleBattery = GObject.registerClass({
         if (this._verifyThreshold())
             return exitCode.SUCCESS;
 
-        const [status] = await runCommandCtl(this.ctlPath, 'PANASONIC', `${this._ecoMode}`, null, null);
+        const [status] = await runCommandCtl(this.ctlPath, 'PANASONIC', `${this._ecoMode}`);
         if (status === exitCode.ERROR) {
             this.emit('threshold-applied', 'failed');
             return exitCode.ERROR;

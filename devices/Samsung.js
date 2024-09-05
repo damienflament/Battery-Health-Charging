@@ -45,7 +45,7 @@ export const SamsungSingleBattery = GObject.registerClass({
         if (this._verifyThreshold())
             return exitCode.SUCCESS;
 
-        const [status] = await runCommandCtl(this.ctlPath, 'SAMSUNG', `${this._batteryLifeExtender}`, null, null);
+        const [status] = await runCommandCtl(this.ctlPath, 'SAMSUNG', `${this._batteryLifeExtender}`);
         if (status === exitCode.ERROR) {
             this.emit('threshold-applied', 'failed');
             return exitCode.ERROR;

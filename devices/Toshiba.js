@@ -56,7 +56,7 @@ export const ToshibaSingleBatteryBAT0 = GObject.registerClass({
             endValue = 100;
         else if (chargingMode === 'max')
             endValue = 80;
-        const [status] = await runCommandCtl(this.ctlPath, 'BAT0_END', `${endValue}`, null, null);
+        const [status] = await runCommandCtl(this.ctlPath, 'BAT0_END', `${endValue}`);
         if (status === exitCode.SUCCESS) {
             this.endLimitValue = endValue;
             this.emit('threshold-applied', 'success');
@@ -137,7 +137,7 @@ export const ToshibaSingleBatteryBAT1 = GObject.registerClass({
             endValue = 100;
         else if (chargingMode === 'max')
             endValue = 80;
-        const [status] = await runCommandCtl(this.ctlPath, 'BAT1_END', `${endValue}`, null, null);
+        const [status] = await runCommandCtl(this.ctlPath, 'BAT1_END', `${endValue}`);
         if (status === exitCode.SUCCESS) {
             this.endLimitValue = endValue;
             this.emit('threshold-applied', 'success');

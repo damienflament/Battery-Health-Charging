@@ -54,7 +54,7 @@ export const AsusSingleBatteryBAT0 = GObject.registerClass({
     async setThresholdLimit(chargingMode) {
         this._endValue = this._settings.get_int(`current-${chargingMode}-end-threshold`);
 
-        const [status] = await runCommandCtl(this.ctlPath, 'BAT0_END', `${this._endValue}`, null, null);
+        const [status] = await runCommandCtl(this.ctlPath, 'BAT0_END', `${this._endValue}`);
         if (status === exitCode.ERROR) {
             this.emit('threshold-applied', 'failed');
             return exitCode.ERROR;
@@ -140,7 +140,7 @@ export const AsusSingleBatteryBAT1 = GObject.registerClass({
     async setThresholdLimit(chargingMode) {
         this._endValue = this._settings.get_int(`current-${chargingMode}-end-threshold`);
 
-        const [status] = await runCommandCtl(this.ctlPath, 'BAT1_END', `${this._endValue}`, null, null);
+        const [status] = await runCommandCtl(this.ctlPath, 'BAT1_END', `${this._endValue}`);
         if (status === exitCode.ERROR) {
             this.emit('threshold-applied', 'failed');
             return exitCode.ERROR;
@@ -226,7 +226,7 @@ export const AsusSingleBatteryBATC = GObject.registerClass({
     async setThresholdLimit(chargingMode) {
         this._endValue = this._settings.get_int(`current-${chargingMode}-end-threshold`);
 
-        const [status] = await runCommandCtl(this.ctlPath, 'BATC_END', `${this._endValue}`, null, null);
+        const [status] = await runCommandCtl(this.ctlPath, 'BATC_END', `${this._endValue}`);
         if (status === exitCode.ERROR) {
             this.emit('threshold-applied', 'failed');
             return exitCode.ERROR;
@@ -312,7 +312,7 @@ export const AsusSingleBatteryBATT = GObject.registerClass({
     async setThresholdLimit(chargingMode) {
         this._endValue = this._settings.get_int(`current-${chargingMode}-end-threshold`);
 
-        const [status] = await runCommandCtl(this.ctlPath, 'BATT_END', `${this._endValue}`, null, null);
+        const [status] = await runCommandCtl(this.ctlPath, 'BATT_END', `${this._endValue}`);
         if (status === exitCode.ERROR) {
             this.emit('threshold-applied', 'failed');
             return exitCode.ERROR;

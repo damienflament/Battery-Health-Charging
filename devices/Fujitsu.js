@@ -51,7 +51,7 @@ export const FujitsuSingleBatteryCMB0 = GObject.registerClass({
 
     async setThresholdLimit(chargingMode) {
         this._endValue = this._settings.get_int(`current-${chargingMode}-end-threshold`);
-        const [status] = await runCommandCtl(this.ctlPath, 'CMB0_END', `${this._endValue}`, null, null);
+        const [status] = await runCommandCtl(this.ctlPath, 'CMB0_END', `${this._endValue}`);
         if (status === exitCode.ERROR) {
             this.emit('threshold-applied', 'failed');
             return exitCode.ERROR;

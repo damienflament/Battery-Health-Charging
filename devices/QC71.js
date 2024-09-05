@@ -56,7 +56,7 @@ export const QC71SingleBatteryBAT0 = GObject.registerClass({
         if (this._verifyThreshold())
             return exitCode.SUCCESS;
 
-        const [status] = await runCommandCtl(this.ctlPath, 'BAT0_END', `${this._endValue}`, null, null);
+        const [status] = await runCommandCtl(this.ctlPath, 'BAT0_END', `${this._endValue}`);
         if (status === exitCode.ERROR) {
             this.emit('threshold-applied', 'failed');
             return exitCode.ERROR;

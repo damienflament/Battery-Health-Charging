@@ -45,7 +45,7 @@ export const LgSingleBattery = GObject.registerClass({
         if (this._verifyThreshold())
             return exitCode.SUCCESS;
 
-        const [status] = await runCommandCtl(this.ctlPath, 'LG', `${this._batteryCareLimit}`, null, null);
+        const [status] = await runCommandCtl(this.ctlPath, 'LG', `${this._batteryCareLimit}`);
         if (status === exitCode.ERROR) {
             this.emit('threshold-applied', 'failed');
             return exitCode.ERROR;

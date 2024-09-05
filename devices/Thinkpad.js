@@ -100,9 +100,9 @@ export const ThinkpadDualBattery = GObject.registerClass({
         }
         // Some device wont update end threshold if start threshold > end threshold
         if (startValue >= oldEndValue)
-            [status] = await runCommandCtl(this.ctlPath, 'BAT0_END_START', `${endValue}`, `${startValue}`, null);
+            [status] = await runCommandCtl(this.ctlPath, 'BAT0_END_START', `${endValue}`, `${startValue}`);
         else
-            [status] = await runCommandCtl(this.ctlPath, 'BAT0_START_END', `${endValue}`, `${startValue}`, null);
+            [status] = await runCommandCtl(this.ctlPath, 'BAT0_START_END', `${endValue}`, `${startValue}`);
         if (status === exitCode.SUCCESS) {
             this.endLimitValue = readFileInt(BAT0_END_PATH);
             this.startLimitValue = readFileInt(BAT0_START_PATH);
@@ -131,9 +131,9 @@ export const ThinkpadDualBattery = GObject.registerClass({
         }
         // Some device wont update end threshold if start threshold > end threshold
         if (startValue >= oldEndValue)
-            [status] = await runCommandCtl(this.ctlPath, 'BAT1_END_START', `${endValue}`, `${startValue}`, null);
+            [status] = await runCommandCtl(this.ctlPath, 'BAT1_END_START', `${endValue}`, `${startValue}`);
         else
-            [status] = await runCommandCtl(this.ctlPath, 'BAT1_START_END', `${endValue}`, `${startValue}`, null);
+            [status] = await runCommandCtl(this.ctlPath, 'BAT1_START_END', `${endValue}`, `${startValue}`);
         if (status === exitCode.SUCCESS) {
             this.endLimit2Value = readFileInt(BAT1_END_PATH);
             this.startLimit2Value = readFileInt(BAT1_START_PATH);
@@ -268,9 +268,9 @@ export const ThinkpadSingleBatteryBAT0 = GObject.registerClass({
 
         // Some device wont update end threshold if start threshold > end threshold
         if (this._startValue >= this._oldEndValue)
-            [status] = await runCommandCtl(this.ctlPath, 'BAT0_END_START', `${this._endValue}`, `${this._startValue}`, null);
+            [status] = await runCommandCtl(this.ctlPath, 'BAT0_END_START', `${this._endValue}`, `${this._startValue}`);
         else
-            [status] = await runCommandCtl(this.ctlPath, 'BAT0_START_END', `${this._endValue}`, `${this._startValue}`, null);
+            [status] = await runCommandCtl(this.ctlPath, 'BAT0_START_END', `${this._endValue}`, `${this._startValue}`);
 
         if (status === exitCode.ERROR) {
             this.emit('threshold-applied', 'failed');
@@ -329,13 +329,13 @@ export const ThinkpadSingleBatteryBAT0 = GObject.registerClass({
     _enableForceDischarge() {
         const forceDischargeModeRead = this._readForceDischargeMode();
         if (forceDischargeModeRead !== 'force-discharge')
-            runCommandCtl(this.ctlPath, 'FORCE_DISCHARGE_BAT0', 'force-discharge', null, null);
+            runCommandCtl(this.ctlPath, 'FORCE_DISCHARGE_BAT0', 'force-discharge');
     }
 
     _disableForceDischarge() {
         const forceDischargeModeRead = this._readForceDischargeMode();
         if (forceDischargeModeRead !== 'auto')
-            runCommandCtl(this.ctlPath, 'FORCE_DISCHARGE_BAT0', 'auto', null, null);
+            runCommandCtl(this.ctlPath, 'FORCE_DISCHARGE_BAT0', 'auto');
     }
 
     _forceDischarge() {
@@ -467,9 +467,9 @@ export const ThinkpadSingleBatteryBAT1 = GObject.registerClass({
 
         // Some device wont update end threshold if start threshold > end threshold
         if (this._startValue >= this._oldEndValue)
-            [status] = await runCommandCtl(this.ctlPath, 'BAT1_END_START', `${this._endValue}`, `${this._startValue}`, null);
+            [status] = await runCommandCtl(this.ctlPath, 'BAT1_END_START', `${this._endValue}`, `${this._startValue}`);
         else
-            [status] = await runCommandCtl(this.ctlPath, 'BAT1_START_END', `${this._endValue}`, `${this._startValue}`, null);
+            [status] = await runCommandCtl(this.ctlPath, 'BAT1_START_END', `${this._endValue}`, `${this._startValue}`);
 
         if (status === exitCode.ERROR) {
             this.emit('threshold-applied', 'failed');
@@ -528,13 +528,13 @@ export const ThinkpadSingleBatteryBAT1 = GObject.registerClass({
     _enableForceDischarge() {
         const forceDischargeModeRead = this._readForceDischargeMode();
         if (forceDischargeModeRead !== 'force-discharge')
-            runCommandCtl(this.ctlPath, 'FORCE_DISCHARGE_BAT1', 'force-discharge', null, null);
+            runCommandCtl(this.ctlPath, 'FORCE_DISCHARGE_BAT1', 'force-discharge');
     }
 
     _disableForceDischarge() {
         const forceDischargeModeRead = this._readForceDischargeMode();
         if (forceDischargeModeRead !== 'auto')
-            runCommandCtl(this.ctlPath, 'FORCE_DISCHARGE_BAT1', 'auto', null, null);
+            runCommandCtl(this.ctlPath, 'FORCE_DISCHARGE_BAT1', 'auto');
     }
 
     _forceDischarge() {

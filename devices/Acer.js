@@ -45,7 +45,7 @@ export const AcerSingleBattery = GObject.registerClass({
         if (this._verifyThreshold())
             return exitCode.SUCCESS;
 
-        const [status] = await runCommandCtl(this.ctlPath, 'ACER', `${this._healthMode}`, null, null);
+        const [status] = await runCommandCtl(this.ctlPath, 'ACER', `${this._healthMode}`);
         if (status === exitCode.ERROR) {
             this.emit('threshold-applied', 'failed');
             return exitCode.ERROR;

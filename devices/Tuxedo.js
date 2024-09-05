@@ -58,7 +58,7 @@ export const Tuxedo3ModesSingleBattery = GObject.registerClass({
         if (this._verifyThreshold())
             return exitCode.SUCCESS;
 
-        const [status] = await runCommandCtl(this.ctlPath, 'TUXEDO', this._profile, null, null);
+        const [status] = await runCommandCtl(this.ctlPath, 'TUXEDO', this._profile);
         if (status === exitCode.ERROR) {
             this.emit('threshold-applied', 'failed');
             return exitCode.ERROR;

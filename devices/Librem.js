@@ -68,9 +68,9 @@ export const LibremSingleBatteryBAT0 = GObject.registerClass({
 
         // Some device wont update end threshold if start threshold > end threshold
         if (this._startValue >= this._oldEndValue)
-            [status] = await runCommandCtl(this.ctlPath, 'BAT0_END_START', `${this._endValue}`, `${this._startValue}`, null);
+            [status] = await runCommandCtl(this.ctlPath, 'BAT0_END_START', `${this._endValue}`, `${this._startValue}`);
         else
-            [status] = await runCommandCtl(this.ctlPath, 'BAT0_START_END', `${this._endValue}`, `${this._startValue}`, null);
+            [status] = await runCommandCtl(this.ctlPath, 'BAT0_START_END', `${this._endValue}`, `${this._startValue}`);
 
         if (status === exitCode.ERROR) {
             this.emit('threshold-applied', 'failed');

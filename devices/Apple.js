@@ -76,7 +76,7 @@ export const AppleSingleBattery = GObject.registerClass({
             chargingLedValue = 0;
         }
 
-        const [status] = await runCommandCtl(this.ctlPath, 'APPLE', `${this._endValue}`, `${chargingLedValue}`, null);
+        const [status] = await runCommandCtl(this.ctlPath, 'APPLE', `${this._endValue}`, `${chargingLedValue}`);
         if (status === exitCode.ERROR) {
             this.emit('threshold-applied', 'failed');
             return exitCode.ERROR;
