@@ -415,7 +415,8 @@ case "$TOOLCMD" in
         exit_modifier "$COMMAND1_EXIT_STATUS" "$COMMAND2_EXIT_STATUS"
         ;;
     FRAMEWORK_TOOL_THRESHOLD_READ)
-        if [[ $ARG1 == */framework_tool ]]; then
+        validate_path "$ARG1" "/framework_tool"
+        if [[ $? -eq 0 ]]; then
             "$ARG1" --driver "$ARG2" --charge-limit
             COMMAND1_EXIT_STATUS="$?"
             exit_modifier "$COMMAND1_EXIT_STATUS" "$COMMAND2_EXIT_STATUS"
@@ -424,7 +425,8 @@ case "$TOOLCMD" in
         fi
         ;;
     FRAMEWORK_TOOL_THRESHOLD_WRITE)
-        if [[ $ARG1 == */framework_tool ]]; then
+        validate_path "$ARG1" "/framework_tool"
+        if [[ $? -eq 0 ]]; then
             "$ARG1" --driver "$ARG2" --charge-limit "$ARG3"
             COMMAND1_EXIT_STATUS="$?"
             exit_modifier "$COMMAND1_EXIT_STATUS" "$COMMAND2_EXIT_STATUS"

@@ -4,7 +4,7 @@ import GLib from 'gi://GLib';
 import GObject from 'gi://GObject';
 import * as Helper from '../lib/helper.js';
 
-const {exitCode, fileExists, readFileInt, readFile, runCommandCtl} = Helper;
+const {exitCode, fileExists, findValidProgramInPath, readFileInt, readFile, runCommandCtl} = Helper;
 
 const BAT1_END_PATH = '/sys/class/power_supply/BAT1/charge_control_end_threshold';
 const CROS_EC_PATH = '/dev/cros_ec';
@@ -45,7 +45,7 @@ export const FrameworkSingleBatteryBAT1 = GObject.registerClass({
             return false;
 
         this._hasSysfsNode = fileExists(BAT1_END_PATH);
-        this._frameworkToolPath = GLib.find_program_in_path('framework_tool');
+        this._frameworkToolPath = findValidProgramInPath('framework_tool');
         this._hasFrameworkTool = !!this._frameworkToolPath;
 
         if (!this._hasSysfsNode && !this._hasFrameworkTool)
