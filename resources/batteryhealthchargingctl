@@ -119,6 +119,27 @@ function exit_modifier() {
     fi
 }
 
+function validate_path() {
+    local TOOLPATH="$1"
+    local TOOLNAME="$2"
+    local VALIDPATHS=(
+        "/usr/local/sbin/"
+        "/usr/local/bin/"
+        "/usr/sbin/"
+        "/usr/bin/"
+        "/opt/"
+        "/run/wrapper/bin/"
+        "/run/current-system/sw/bin/"
+        "/nix/store/"
+    )
+    for BASEPATH in "${VALIDPATHS[@]}"; do
+        if [[ "$TOOLPATH" == "${BASEPATH}"* && "$TOOLPATH" == *"$TOOLNAME" ]]; then
+            return 0
+        fi
+    done
+    return 1
+}
+
 case "$TOOLCMD" in
     CHECKINSTALLATION)
         check_installation
