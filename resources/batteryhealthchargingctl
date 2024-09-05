@@ -412,6 +412,7 @@ case "$TOOLCMD" in
         fi
         ;;
     *)
-        echo "Unknown" >&2
+        echo "Unknown Command"
+        exit ${EXIT_ERROR}
 esac
 
