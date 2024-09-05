@@ -6,7 +6,7 @@ import GObject from 'gi://GObject';
 import Secret from 'gi://Secret';
 import * as Helper from '../lib/helper.js';
 
-const {exitCode, fileExists, runCommandCtl} = Helper;
+const {exitCode, fileExists, findValidProgramInPath, runCommandCtl} = Helper;
 
 const DELL_PATH = '/sys/devices/platform/dell-laptop';
 const SMBIOS_PATH = '/usr/sbin/smbios-battery-ctl';
@@ -53,29 +53,22 @@ export const DellSmBiosSingleBattery = GObject.registerClass({
     isAvailable() {
         if (!fileExists(DELL_PATH))
             return false;
-        let smbiosUsesAbsolutePath = false;
-        let cctkUsesRelativePath = false;
-        this._usesLibSmbios = !!GLib.find_program_in_path('smbios-battery-ctl');
-        if (!this._usesLibSmbios) {
-            this._usesLibSmbios = fileExists(SMBIOS_PATH);
-            smbiosUsesAbsolutePath = this._usesLibSmbios;
-        }
-        this._usesCctk = fileExists(CCTK_PATH);
-        if (!this._usesCctk) {
-            this._usesCctk = !!GLib.find_program_in_path('cctk');
-            cctkUsesRelativePath = this._usesCctk;
-        }
+
+        this._smbiosPath = findValidProgramInPath('smbios-battery-ctl');;
+        if(this._smbiosPath === null)
+            this._smbiosPath = fileExists(SMBIOS_PATH) ? SMBIOS_PATH : null;
+        this._usesLibSmbios = !!this._smbiosPath;
+
+        this._cctkPath = findValidProgramInPath('cctk');;
+        if(this._cctkPath === null)
+            this._cctkPath = fileExists(CCTK_PATH) ? CCTK_PATH : null;
+        this._usesCctk = !!this._cctkPath;
+
         if (!this._usesCctk && !this._usesLibSmbios)
             return false;
 
         this._settings.set_boolean('detected-libsmbios', this._usesLibSmbios);
         this._settings.set_boolean('detected-cctk', this._usesCctk);
-
-        this._readSmbiosCmd = smbiosUsesAbsolutePath ? 'DELL_ABSOLUTE_SMBIOS_BAT_READ' : 'DELL_RELATIVE_SMBIOS_BAT_READ';
-        this._writeSmbiosCmd = smbiosUsesAbsolutePath ? 'DELL_ABSOLUTE_SMBIOS_BAT_WRITE' : 'DELL_RELATIVE_SMBIOS_BAT_WRITE';
-        this._readCctkCmd = cctkUsesRelativePath ? 'DELL_RELATIVE_CCTK_BAT_READ' : 'DELL_ABSOLUTE_CCTK_BAT_READ';
-        this._writeCctkCmd = cctkUsesRelativePath ? 'DELL_RELATIVE_CCTK_BAT_WRITE' : 'DELL_ABSOLUTE_CCTK_BAT_WRITE';
-        this._writeCctkPassCmd = cctkUsesRelativePath ? 'DELL_RELATIVE_CCTK_PASSWORD_BAT_WRITE' : 'DELL_ABSOLUTE_CCTK_PASSWORD_BAT_WRITE';
         return true;
     }
 
@@ -107,25 +100,22 @@ export const DellSmBiosSingleBattery = GObject.registerClass({
         if (verified)
             return exitCode.SUCCESS;
 
-        let arg1, arg2;
         if (this._chargingMode === 'adv' || this._chargingMode === 'exp') {
-            arg1 = this._chargingMode;
-            arg2 = null;
+            await runCommandCtl(this.ctlPath, 'DELL_SMBIOS_WRITE', this._smbiosPath, this._chargingMode);
         } else {
-            arg1 = `${this._endValue}`;
-            arg2 = `${this._startValue}`;
+            await runCommandCtl(this.ctlPath, 'DELL_SMBIOS_WRITE', this._smbiosPath, `${this._startValue}`, `${this._endValue}`);
         }
 
-        await runCommandCtl(this.ctlPath, this._writeSmbiosCmd, arg1, arg2);
         verified = await this._verifySmbiosThreshold();
         if (verified)
             return exitCode.SUCCESS;
+
         this.emit('threshold-applied', 'failed');
         return exitCode.ERROR;
     }
 
     async _verifySmbiosThreshold() {
-        const [, output] = await runCommandCtl(this.ctlPath, this._readSmbiosCmd);
+        const [, output] = await runCommandCtl(this.ctlPath, 'DELL_SMBIOS_READ', this._smbiosPath);
         const filteredOutput = output.trim().replace('(', '').replace(')', '').replace(',', '').replace(/:/g, '');
         const splitOutput = filteredOutput.split('\n');
         const firstLine = splitOutput[0].split(' ');
@@ -171,8 +161,8 @@ export const DellSmBiosSingleBattery = GObject.registerClass({
             this._arg1 = this._chargingMode;
             this._arg2 = 'null';
         } else {
-            this._arg1 = `${this._endValue}`;
-            this._arg2 = `${this._startValue}`;
+            this._arg1 = `${this._startValue}`;
+            this._arg2 = `${this._endValue}`;
         }
 
         if (this._settings.get_boolean('need-bios-password'))
@@ -200,8 +190,8 @@ export const DellSmBiosSingleBattery = GObject.registerClass({
     }
 
     async _writeCctkThreshold(arg3) {
-        const cmd = arg3 ? this._writeCctkPassCmd : this._writeCctkCmd;
-        const [status] = await runCommandCtl(this.ctlPath, cmd, this._arg1, this._arg2, arg3);
+        const cmd = arg3 ? 'DELL_CCTK_AUTH_WRITE' : 'DELL_CCTK_WRITE';
+        const [status] = await runCommandCtl(this.ctlPath, cmd, this._cctkPath, this._arg1, this._arg2, arg3);
         if (status === 65 || status === 58) {
             this.emit('threshold-applied', 'password-required');
             return exitCode.SUCCESS;
@@ -214,7 +204,7 @@ export const DellSmBiosSingleBattery = GObject.registerClass({
     }
 
     async _verifyCctkThreshold() {
-        const [, output] = await runCommandCtl(this.ctlPath, this._readCctkCmd);
+        const [, output] = await runCommandCtl(this.ctlPath, 'DELL_CCTK_READ', this._cctkPath);
         const filteredOutput = output.trim().replace('=', ' ').replace(':', ' ').replace('-', ' ');
         const splitOutput = filteredOutput.split(' ');
         if (splitOutput[0] === 'PrimaryBattChargeCfg') {

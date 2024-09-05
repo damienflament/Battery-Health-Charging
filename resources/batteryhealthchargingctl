@@ -30,8 +30,6 @@ GIGABYTE_LIMIT='/sys/devices/platform/gigabyte_laptop/charge_limit'
 APPLE_CHARGING_LED_PATH='/sys/class/power_supply/BAT0/charge_control_full_threshold'
 BAT0_FORCE_DISCHARGE_PATH='/sys/class/power_supply/BAT0/charge_behaviour'
 BAT1_FORCE_DISCHARGE_PATH='/sys/class/power_supply/BAT1/charge_behaviour'
-DELL_SMBIOS_PATH='/usr/sbin/smbios-battery-ctl'
-DELL_CCTK_PATH='/opt/dell/dcc/cctk'
 CMB0_END_PATH='/sys/class/power_supply/CMB0/charge_control_end_threshold'
 CMB1_END_PATH='/sys/class/power_supply/CMB1/charge_control_end_threshold'
 
@@ -51,6 +49,7 @@ TOOLCMD=$1
 ARG1=${2:-0}
 ARG2=${3:-0}
 ARG3=${4:-0}
+ARG4=${5:-0}
 
 function check_installation() {
     printf -v versions '%s\n%s' "$(pkaction --version | cut -d' ' -f3)" "0.106"
@@ -242,51 +241,6 @@ case "$TOOLCMD" in
         echo "$ARG2" > "$GIGABYTE_LIMIT" && \
         exit "$EXIT_SUCCESS" || exit "$EXIT_ERROR"
         ;;
-    DELL_ABSOLUTE_SMBIOS_BAT_READ)
-        "$DELL_SMBIOS_PATH" --get-charging-cfg && \
-        exit "$EXIT_SUCCESS" || exit "$EXIT_ERROR"
-        ;;
-    DELL_ABSOLUTE_SMBIOS_BAT_WRITE)
-        {
-            if [ "$ARG1" = "adv" ];then
-                "$DELL_SMBIOS_PATH" --set-charging-mode='adaptive'
-            elif [ "$ARG1" = "exp" ];then
-                "$DELL_SMBIOS_PATH" --set-charging-mode='express'
-            else
-                "$DELL_SMBIOS_PATH" --set-charging-mode='custom' && \
-                "$DELL_SMBIOS_PATH" --set-custom-charge-interval="$ARG2" "$ARG1"
-            fi
-        } && \
-        exit "$EXIT_SUCCESS" || exit "$EXIT_ERROR"
-        ;;
-    DELL_ABSOLUTE_CCTK_BAT_READ)
-        "$DELL_CCTK_PATH" --PrimaryBattChargeCfg && \
-        exit "$EXIT_SUCCESS" || exit "$EXIT_ERROR"
-        ;;
-    DELL_ABSOLUTE_CCTK_BAT_WRITE)
-        {
-            if [ "$ARG1" = "adv" ];then
-               "$DELL_CCTK_PATH" --PrimaryBattChargeCfg=Adaptive
-            elif [ "$ARG1" = "exp" ];then
-                "$DELL_CCTK_PATH" --PrimaryBattChargeCfg=Express
-            else
-                "$DELL_CCTK_PATH" --PrimaryBattChargeCfg=Custom:"$ARG2"-"$ARG1"
-            fi
-        } && \
-        exit "$EXIT_SUCCESS" || exit "$EXIT_ERROR"
-        ;;
-    DELL_ABSOLUTE_CCTK_PASSWORD_BAT_WRITE)
-        {
-            if [ "$ARG1" = "adv" ];then
-               "$DELL_CCTK_PATH" --ValSetupPwd="$ARG3" --PrimaryBattChargeCfg=Adaptive
-            elif [ "$ARG1" = "exp" ];then
-                "$DELL_CCTK_PATH" --ValSetupPwd="$ARG3" --PrimaryBattChargeCfg=Express
-            else
-                "$DELL_CCTK_PATH" --ValSetupPwd="$ARG3" --PrimaryBattChargeCfg=Custom:"$ARG2"-"$ARG1"
-            fi
-        } && \
-        exit "$EXIT_SUCCESS" || exit "$EXIT_ERROR"
-        ;;
     APPLE)
         echo "$ARG1" > "$BAT0_END_PATH" && \
         {
@@ -304,57 +258,61 @@ case "$TOOLCMD" in
         echo "$ARG1" > "$BAT1_FORCE_DISCHARGE_PATH" && \
         exit "$EXIT_SUCCESS" || exit "$EXIT_ERROR"
         ;;
-    DELL_RELATIVE_SMBIOS_BAT_READ)
-        smbios-battery-ctl --get-charging-cfg && \
-        exit "$EXIT_SUCCESS" || exit "$EXIT_ERROR"
-        ;;
-    DELL_RELATIVE_SMBIOS_BAT_WRITE)
-        {
-            if [ "$ARG1" = "adv" ];then
-                smbios-battery-ctl --set-charging-mode='adaptive'
-            elif [ "$ARG1" = "exp" ];then
-                smbios-battery-ctl --set-charging-mode='express'
-            else
-            smbios-battery-ctl --set-charging-mode='custom' && \
-            smbios-battery-ctl --set-custom-charge-interval="$ARG2" "$ARG1"
-            fi
-        } && \
-        exit "$EXIT_SUCCESS" || exit "$EXIT_ERROR"
-        ;;
-    DELL_RELATIVE_CCTK_BAT_READ)
-        cctk --PrimaryBattChargeCfg && \
-        exit "$EXIT_SUCCESS" || exit "$EXIT_ERROR"
-        ;;
-    DELL_RELATIVE_CCTK_BAT_WRITE)
-        {
-            if [ "$ARG1" = "adv" ];then
-                cctk --PrimaryBattChargeCfg=Adaptive
-            elif [ "$ARG1" = "exp" ];then
-                cctk --PrimaryBattChargeCfg=Express
-            else
-                cctk --PrimaryBattChargeCfg=Custom:"$ARG2"-"$ARG1"
-            fi
-        } && \
-        exit "$EXIT_SUCCESS" || exit "$EXIT_ERROR"
-        ;;
-    DELL_RELATIVE_CCTK_PASSWORD_BAT_WRITE)
-        {
-            if [ "$ARG1" = "adv" ];then
-                cctk --ValSetupPwd="$ARG3" --PrimaryBattChargeCfg=Adaptive
-            elif [ "$ARG1" = "exp" ];then
-                cctk --ValSetupPwd="$ARG3" --PrimaryBattChargeCfg=Express
-            else
-                cctk --ValSetupPwd="$ARG3" --PrimaryBattChargeCfg=Custom:"$ARG2"-"$ARG1"
-            fi
-        } && \
-        exit "$EXIT_SUCCESS" || exit "$EXIT_ERROR"
-        ;;
     CMB0_END)
         echo "$ARG1" > "$CMB0_END_PATH" && \
         exit "$EXIT_SUCCESS" || exit "$EXIT_ERROR"
         ;;
     CMB1_END)
         echo "$ARG1" > "$CMB1_END_PATH" && \
+        exit "$EXIT_SUCCESS" || exit "$EXIT_ERROR"
+        ;;
+    DELL_SMBIOS_READ)
+        validate_path "$ARG1" "/smbios-battery-ctl" && \
+        "$ARG1" --get-charging-cfg && \
+        exit "$EXIT_SUCCESS" || exit "$EXIT_ERROR"
+        ;;
+    DELL_SMBIOS_WRITE)
+        validate_path "$ARG1" "/smbios-battery-ctl" && \
+        {
+            if [ "$ARG2" = "adv" ];then
+                "$ARG1" --set-charging-mode='adaptive'
+            elif [ "$ARG2" = "exp" ];then
+                "$ARG1" --set-charging-mode='express'
+            else
+                "$ARG1" --set-charging-mode='custom' && \
+                "$ARG1" --set-custom-charge-interval="$ARG2" "$ARG3"
+            fi
+        } && \
+        exit "$EXIT_SUCCESS" || exit "$EXIT_ERROR"
+        ;;
+    DELL_CCTK_READ)
+        validate_path "$ARG1" "/cctk" && \
+        "$ARG1" --PrimaryBattChargeCfg && \
+        exit "$EXIT_SUCCESS" || exit "$EXIT_ERROR"
+        ;;
+    DELL_CCTK_WRITE)
+        validate_path "$ARG1" "/cctk" && \
+        {
+            if [ "$ARG2" = "adv" ];then
+                cctk --PrimaryBattChargeCfg=Adaptive
+            elif [ "$ARG2" = "exp" ];then
+                cctk --PrimaryBattChargeCfg=Express
+            else
+                cctk --PrimaryBattChargeCfg=Custom:"$ARG2"-"$ARG3"
+            fi
+        } && \
+        exit "$EXIT_SUCCESS" || exit "$EXIT_ERROR"
+        ;;
+    DELL_CCTK_AUTH_WRITE)
+        {
+            if [ "$ARG1" = "adv" ];then
+                cctk --ValSetupPwd="$ARG4" --PrimaryBattChargeCfg=Adaptive
+            elif [ "$ARG1" = "exp" ];then
+                cctk --ValSetupPwd="$ARG4" --PrimaryBattChargeCfg=Express
+            else
+                cctk --ValSetupPwd="$ARG4" --PrimaryBattChargeCfg=Custom:"$ARG2"-"$ARG3"
+            fi
+        } && \
         exit "$EXIT_SUCCESS" || exit "$EXIT_ERROR"
         ;;
     FRAMEWORK_TOOL_THRESHOLD_READ)
