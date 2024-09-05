@@ -3,6 +3,7 @@ import Adw from 'gi://Adw';
 import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
 import GObject from 'gi://GObject';
+import Gtk from 'gi://Gtk';
 import Secret from 'gi://Secret';
 
 export const Dell = GObject.registerClass({
@@ -10,7 +11,7 @@ export const Dell = GObject.registerClass({
     Template: GLib.Uri.resolve_relative(import.meta.url, '../ui/dell.ui', GLib.UriFlags.NONE),
     InternalChildren: [
         'device_settings_group',
-        'choose_package',
+        'choose_configuration',
         'bios_settings_group',
         'need_bios_password',
         'password_entry_box',
@@ -21,25 +22,55 @@ export const Dell = GObject.registerClass({
     constructor(settings) {
         super({});
         this._settings = settings;
+        const configurationMapping = {
+            'sysfs': 'Sysfs node',
+            'libsmbios': 'Libsmbios',
+            'cctk': 'Dell Command Center',
+        };
 
-        this._showPackageOption = this._settings.get_boolean('detected-libsmbios');
-        this._device_settings_group.visible = this._showPackageOption;
+        const showPackageOption = this._settings.get_strv('multiple-configuration-supported').length > 1;
+        this._device_settings_group.visible = showPackageOption;
 
-        this._bios_settings_group.visible = !this._showPackageOption || (this._settings.get_int('dell-package-type') === 1);
+        if (showPackageOption) {
+            const supportedConfigs = this._settings.get_strv('multiple-configuration-supported');
+            const displayNames = supportedConfigs.map(config => configurationMapping[config]);
+            const stringList = new Gtk.StringList();
+            displayNames.forEach(name => stringList.append(name));
+            this._choose_configuration.set_model(stringList);
+            const currentConfigMode = this._settings.get_string('configuration-mode');
+            const initialSelectedIndex = supportedConfigs.indexOf(currentConfigMode);
+            if (initialSelectedIndex !== -1)
+                this._choose_configuration.set_selected(initialSelectedIndex);
+
+            this._choose_configuration.connect('notify::selected-item', () => {
+                const selectedIndex = this._choose_configuration.get_selected();
+                const selectedConfig = supportedConfigs[selectedIndex];
+                this._settings.set_string('configuration-mode', selectedConfig);
+            });
+        }
+
+        this._bios_settings_group.visible = this._settings.get_string('configuration-mode') === 'cctk';
+        if (this._settings.get_string('configuration-mode') === 'cctk')
+            this._addBiosPasswordOption();
+
+        this._settings.connect('changed::configuration-mode', () => {
+            if (this._settings.get_string('configuration-mode') === 'cctk') {
+                if (this._secretSchema)
+                    this._bios_settings_group.visible = true;
+                else
+                    this._addBiosPasswordOption();
+            } else {
+                this._bios_settings_group.visible = false;
+            }
+        });
+    }
+
+    _addBiosPasswordOption() {
         this._success_keyring_icon.visible = false;
         this._failed_keyring_icon.visible = false;
 
         this._secretSchema = new Secret.Schema('org.gnome.shell.extensions.Battery-Health-Charging',
             Secret.SchemaFlags.NONE, {'string': Secret.SchemaAttributeType.STRING});
-
-        if (this._showPackageOption) {
-            this._settings.bind(
-                'dell-package-type',
-                this._choose_package,
-                'selected',
-                Gio.SettingsBindFlags.DEFAULT
-            );
-        }
 
         this._settings.bind(
             'need-bios-password',
@@ -47,10 +78,6 @@ export const Dell = GObject.registerClass({
             'active',
             Gio.SettingsBindFlags.DEFAULT
         );
-
-        this._settings.connect('changed::dell-package-type', () => {
-            this._bios_settings_group.visible = this._settings.get_int('dell-package-type') === 1;
-        });
 
         this._password_entry_box.connect('activate', () => {
             this._setPassword(this._password_entry_box.text);

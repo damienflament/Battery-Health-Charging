@@ -9,13 +9,12 @@
         <property name="title" translatable="yes">Device settings</property>
         <child>
           <object class="AdwActionRow">
-            <property name="title" translatable="yes">Dell package for charging mode</property>
-            <property name="subtitle" translatable="yes">Select Dell package used for changing charging mode/threshold.</property>
-            <property name="activatable-widget">choose_package</property>
+            <property name="title" translatable="yes">Select configuration for charging mode</property>
+            <property name="subtitle" translatable="yes">Select configuration used for changing charging mode/threshold.</property>
+            <property name="activatable-widget">choose_configuration</property>
             <child>
-              <object class="GtkDropDown" id="choose_package">
+              <object class="GtkDropDown" id="choose_configuration">
                 <property name="valign">center</property>
-                <property name="model">choose_package_model</property>
               </object>
             </child>
           </object>
@@ -74,10 +73,4 @@
       </object>
     </child>
   </template>
-  <object class="GtkStringList" id="choose_package_model">
-    <items>
-      <item translatable="yes">Libsmbios</item>
-      <item translatable="yes">Dell Command Center</item>
-    </items>
-  </object>
 </interface>

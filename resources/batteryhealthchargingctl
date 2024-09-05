@@ -32,6 +32,8 @@ BAT0_FORCE_DISCHARGE_PATH='/sys/class/power_supply/BAT0/charge_behaviour'
 BAT1_FORCE_DISCHARGE_PATH='/sys/class/power_supply/BAT1/charge_behaviour'
 CMB0_END_PATH='/sys/class/power_supply/CMB0/charge_control_end_threshold'
 CMB1_END_PATH='/sys/class/power_supply/CMB1/charge_control_end_threshold'
+DELL_BAT0_CHARGE_TYPES_PATH='/sys/class/power_supply/BAT0/charge_types'
+DELL_BAT1_CHARGE_TYPES_PATH='/sys/class/power_supply/BAT1/charge_types'
 
 EXTENSION_NAME="Battery Health Charging"
 ACTION_BASE="dem.batteryhealthcharging"
@@ -266,6 +268,62 @@ case "$TOOLCMD" in
         echo "$ARG1" > "$CMB1_END_PATH" && \
         exit "$EXIT_SUCCESS" || exit "$EXIT_ERROR"
         ;;
+    DELL_BAT0_END_START)
+        {
+            if [ "$ARG1" = "adv" ];then
+                echo "Adaptive" > "$DELL_BAT0_CHARGE_TYPES_PATH"
+            elif [ "$ARG1" = "exp" ];then
+                echo "Fast" > "$DELL_BAT0_CHARGE_TYPES_PATH"
+            else
+                echo "Custom" > "$DELL_BAT0_CHARGE_TYPES_PATH" && \
+                echo "$ARG2" > "$BAT0_END_PATH" && \
+                echo "$ARG3" > "$BAT0_START_PATH"
+            fi
+        } && \
+        exit "$EXIT_SUCCESS" || exit "$EXIT_ERROR"
+        ;;
+    DELL_BAT0_START_END)
+        {
+            if [ "$ARG1" = "adv" ];then
+                echo "Adaptive" > "$DELL_BAT0_CHARGE_TYPES_PATH"
+            elif [ "$ARG1" = "exp" ];then
+                echo "Fast" > "$DELL_BAT0_CHARGE_TYPES_PATH"
+            else
+                echo "Custom" > "$DELL_BAT0_CHARGE_TYPES_PATH" && \
+                echo "$ARG3" > "$BAT0_START_PATH" && \
+                echo "$ARG2" > "$BAT0_END_PATH"
+            fi
+        } && \
+        exit "$EXIT_SUCCESS" || exit "$EXIT_ERROR"
+        ;;
+    DELL_BAT1_END_START)
+        {
+            if [ "$ARG1" = "adv" ];then
+                echo "Adaptive" > "$DELL_BAT1_CHARGE_TYPES_PATH"
+            elif [ "$ARG1" = "exp" ];then
+                echo "Fast" > "$DELL_BAT1_CHARGE_TYPES_PATH"
+            else
+                echo "Custom" > "$DELL_BAT1_CHARGE_TYPES_PATH" && \
+                echo "$ARG2" > "$BAT1_END_PATH" && \
+                echo "$ARG3" > "$BAT1_START_PATH"
+            fi
+        } && \
+        exit "$EXIT_SUCCESS" || exit "$EXIT_ERROR"
+        ;;
+    DELL_BAT1_START_END)
+        {
+            if [ "$ARG1" = "adv" ];then
+                echo "Adaptive" > "$DELL_BAT1_CHARGE_TYPES_PATH"
+            elif [ "$ARG1" = "exp" ];then
+                echo "Fast" > "$DELL_BAT1_CHARGE_TYPES_PATH"
+            else
+                echo "Custom" > "$DELL_BAT1_CHARGE_TYPES_PATH" && \
+                echo "$ARG3" > "$BAT1_START_PATH" && \
+                echo "$ARG2" > "$BAT1_END_PATH"
+            fi
+        } && \
+        exit "$EXIT_SUCCESS" || exit "$EXIT_ERROR"
+        ;;
     DELL_SMBIOS_READ)
         validate_path "$ARG1" "/smbios-battery-ctl" && \
         "$ARG1" --get-charging-cfg && \
@@ -294,26 +352,41 @@ case "$TOOLCMD" in
         validate_path "$ARG1" "/cctk" && \
         {
             if [ "$ARG2" = "adv" ];then
-                cctk --PrimaryBattChargeCfg=Adaptive
+                "$ARG1" --PrimaryBattChargeCfg=Adaptive
             elif [ "$ARG2" = "exp" ];then
-                cctk --PrimaryBattChargeCfg=Express
+                "$ARG1" --PrimaryBattChargeCfg=Express
             else
-                cctk --PrimaryBattChargeCfg=Custom:"$ARG2"-"$ARG3"
+                "$ARG1" --PrimaryBattChargeCfg=Custom:"$ARG2"-"$ARG3"
             fi
-        } && \
-        exit "$EXIT_SUCCESS" || exit "$EXIT_ERROR"
+        }
+        COMMAND_EXIT_STATUS="$?"
+        if [ "$COMMAND_EXIT_STATUS" -eq 65 ] || [ "$COMMAND_EXIT_STATUS" -eq 58 ]; then
+            exit "$COMMAND_EXIT_STATUS"
+        elif [ "$COMMAND_EXIT_STATUS" -eq 0 ]; then
+            exit "$EXIT_SUCCESS"
+        else
+            exit "$EXIT_ERROR"
+        fi
         ;;
     DELL_CCTK_AUTH_WRITE)
+        validate_path "$ARG1" "/cctk" && \
         {
-            if [ "$ARG1" = "adv" ];then
-                cctk --ValSetupPwd="$ARG4" --PrimaryBattChargeCfg=Adaptive
-            elif [ "$ARG1" = "exp" ];then
-                cctk --ValSetupPwd="$ARG4" --PrimaryBattChargeCfg=Express
+            if [ "$ARG3" = "adv" ];then
+                "$ARG1" --ValSetupPwd="$ARG2" --PrimaryBattChargeCfg=Adaptive
+            elif [ "$ARG3" = "exp" ];then
+                "$ARG1" --ValSetupPwd="$ARG2" --PrimaryBattChargeCfg=Express
             else
-                cctk --ValSetupPwd="$ARG4" --PrimaryBattChargeCfg=Custom:"$ARG2"-"$ARG3"
+                "$ARG1" --ValSetupPwd="$ARG2" --PrimaryBattChargeCfg=Custom:"$ARG3"-"$ARG4"
             fi
-        } && \
-        exit "$EXIT_SUCCESS" || exit "$EXIT_ERROR"
+        }
+        COMMAND_EXIT_STATUS="$?"
+        if [ "$COMMAND_EXIT_STATUS" -eq 65 ] || [ "$COMMAND_EXIT_STATUS" -eq 58 ]; then
+            exit "$COMMAND_EXIT_STATUS"
+        elif [ "$COMMAND_EXIT_STATUS" -eq 0 ]; then
+            exit "$EXIT_SUCCESS"
+        else
+            exit "$EXIT_ERROR"
+        fi
         ;;
     FRAMEWORK_TOOL_THRESHOLD_READ)
         validate_path "$ARG1" "/framework_tool" && \

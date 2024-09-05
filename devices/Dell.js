@@ -6,11 +6,20 @@ import GObject from 'gi://GObject';
 import Secret from 'gi://Secret';
 import * as Helper from '../lib/helper.js';
 
-const {exitCode, fileExists, findValidProgramInPath, runCommandCtl} = Helper;
+const {exitCode, fileExists, findValidProgramInPath, readFile, readFileInt, runCommandCtl} = Helper;
 
 const DELL_PATH = '/sys/devices/platform/dell-laptop';
 const SMBIOS_PATH = '/usr/sbin/smbios-battery-ctl';
 const CCTK_PATH = '/opt/dell/dcc/cctk';
+
+const BAT0_CHARGETYPE_PATH = '/sys/class/power_supply/BAT0/charge_types';
+const BAT0_END_PATH = '/sys/class/power_supply/BAT0/charge_control_end_threshold';
+const BAT0_START_PATH = '/sys/class/power_supply/BAT0/charge_control_start_threshold';
+
+const BAT1_CHARGETYPE_PATH = '/sys/class/power_supply/BAT1/charge_types';
+const BAT1_END_PATH = '/sys/class/power_supply/BAT1/charge_control_end_threshold';
+const BAT1_START_PATH = '/sys/class/power_supply/BAT1/charge_control_start_threshold';
+
 
 export const DellSmBiosSingleBattery = GObject.registerClass({
     Signals: {'threshold-applied': {param_types: [GObject.TYPE_STRING]}},
@@ -54,57 +63,151 @@ export const DellSmBiosSingleBattery = GObject.registerClass({
         if (!fileExists(DELL_PATH))
             return false;
 
-        this._smbiosPath = findValidProgramInPath('smbios-battery-ctl');;
-        if(this._smbiosPath === null)
+        this._supportedConfiguration = [];
+
+        const usesBAT0 = fileExists(BAT0_CHARGETYPE_PATH);
+        const usesBAT1 = fileExists(BAT1_CHARGETYPE_PATH);
+
+        if (usesBAT0 || usesBAT1) {
+            this._supportedConfiguration.push('sysfs');
+            this._chargeTypesPath = usesBAT0 ? BAT0_CHARGETYPE_PATH : BAT1_CHARGETYPE_PATH;
+            this._endPath = usesBAT0 ? BAT0_END_PATH : BAT1_END_PATH;
+            this._startPath = usesBAT0 ? BAT0_START_PATH : BAT1_START_PATH;
+            this._dellEndStartCmd = usesBAT0 ? 'DELL_BAT0_END_START' : 'DELL_BAT1_END_START';
+            this._dellStartEndCmd = usesBAT0 ? 'DELL_BAT0_START_END' : 'DELL_BAT1_START_END';
+        }
+
+        this._smbiosPath = findValidProgramInPath('smbios-battery-ctl');
+        if (this._smbiosPath === null)
             this._smbiosPath = fileExists(SMBIOS_PATH) ? SMBIOS_PATH : null;
-        this._usesLibSmbios = !!this._smbiosPath;
+        if (this._smbiosPath)
+            this._supportedConfiguration.push('libsmbios');
 
-        this._cctkPath = findValidProgramInPath('cctk');;
-        if(this._cctkPath === null)
+        this._cctkPath = findValidProgramInPath('cctk');
+        if (this._cctkPath === null)
             this._cctkPath = fileExists(CCTK_PATH) ? CCTK_PATH : null;
-        this._usesCctk = !!this._cctkPath;
+        if (this._cctkPath)
+            this._supportedConfiguration.push('cctk');
 
-        if (!this._usesCctk && !this._usesLibSmbios)
+        if (this._supportedConfiguration.length <= 0)
             return false;
 
-        this._settings.set_boolean('detected-libsmbios', this._usesLibSmbios);
-        this._settings.set_boolean('detected-cctk', this._usesCctk);
+        this._settings.set_strv('multiple-configuration-supported', this._supportedConfiguration);
+        if (this._supportedConfiguration.length === 1)
+            this._settings.set_string('configuration-mode', this._supportedConfiguration[0]);
         return true;
     }
 
     async setThresholdLimit(chargingMode) {
         let status;
-        if (this._usesCctk && this._usesLibSmbios) {
-            const dellPackage = this._settings.get_int('dell-package-type');
-            if (dellPackage === 0)
-                status = await this.setThresholdLimitLibSmbios(chargingMode);
-            else if (dellPackage === 1)
-                status = await this.setThresholdLimitCctk(chargingMode);
-        } else if (this._usesLibSmbios) {
-            status = await this.setThresholdLimitLibSmbios(chargingMode);
-        } else if (this._usesCctk) {
-            status = await this.setThresholdLimitCctk(chargingMode);
+        this._chargingMode = chargingMode;
+        if (this._chargingMode !== 'adv' && this._chargingMode !== 'exp') {
+            this._endValue = this._settings.get_int(`current-${chargingMode}-end-threshold`);
+            this._startValue = this._settings.get_int(`current-${chargingMode}-start-threshold`);
+            if (this._endValue - this._startValue < 5)
+                this._startValue = this._endValue - 5;
+        }
+
+        if (this._supportedConfiguration.length === 1) {
+            const config = this._supportedConfiguration[0];
+            status = await this._executeThresholdFunction(config);
+        } else if (this._supportedConfiguration.length > 1) {
+            const mode = this._settings.get_string('configuration-mode');
+            if (this._supportedConfiguration.includes(mode)) {
+                status = await this._executeThresholdFunction(mode);
+            } else {
+                const fallbackConfig = this._supportedConfiguration[0];
+                this._settings.set_string('configuration-mode', fallbackConfig);
+                status = await this._executeThresholdFunction(fallbackConfig);
+            }
         }
         return status;
     }
 
-    async setThresholdLimitLibSmbios(chargingMode) {
-        this._chargingMode = chargingMode;
-        if (this._chargingMode !== 'adv' && this._chargingMode !== 'exp') {
-            this._endValue = this._settings.get_int(`current-${this._chargingMode}-end-threshold`);
-            this._startValue = this._settings.get_int(`current-${this._chargingMode}-start-threshold`);
-            if ((this._endValue - this._startValue) < 5)
-                this._startValue = this._endValue - 5;
+    async _executeThresholdFunction(config) {
+        let status;
+        if (config === 'sysfs')
+            status = await this._setThresholdLimitSysFs();
+        else if (config === 'libsmbios')
+            status = await this._setThresholdLimitLibSmbios();
+        else if (config === 'cctk')
+            status = await this._setThresholdLimitCctk();
+        return status;
+    }
+
+    // sysfs
+    async _setThresholdLimitSysFs() {
+        let status;
+
+        if (this._verifySysFsThreshold())
+            return exitCode.SUCCESS;
+
+        // Some device wont update end threshold if start threshold > end threshold
+        if (this._startValue >= this._oldEndValue)
+            [status] = await runCommandCtl(this.ctlPath, this._dellEndStartCmd, this._chargingMode, `${this._endValue}`, `${this._startValue}`);
+        else
+            [status] = await runCommandCtl(this.ctlPath, this._dellStartEndCmd, this._chargingMode, `${this._endValue}`, `${this._startValue}`);
+
+        if (status === exitCode.ERROR) {
+            this.emit('threshold-applied', 'failed');
+            return exitCode.ERROR;
         }
+
+        if (this._verifySysFsThreshold())
+            return exitCode.SUCCESS;
+
+        if (this._delayReadTimeoutId)
+            GLib.source_remove(this._delayReadTimeoutId);
+        this._delayReadTimeoutId = null;
+
+        await new Promise(resolve => {
+            this._delayReadTimeoutId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 200, () => {
+                resolve();
+                return GLib.SOURCE_REMOVE;
+            });
+        });
+        this._delayReadTimeoutId = null;
+
+        if (this._verifySysFsThreshold())
+            return exitCode.SUCCESS;
+
+        this.emit('threshold-applied', 'failed');
+        return exitCode.ERROR;
+    }
+
+    _verifySysFsThreshold() {
+        const chargeType = readFile(this._chargeTypesPath);
+        const mode = chargeType && chargeType.substring(chargeType.indexOf('[') + 1, chargeType.lastIndexOf(']'));
+        if (mode === 'Adaptive' && this._chargingMode === 'adv' || mode === 'Fast' && this._chargingMode === 'exp') {
+            this.mode = this._chargingMode;
+            this.endLimitValue = 100;
+            this.startLimitValue = 95;
+            this.emit('threshold-applied', 'success');
+            return true;
+        } else if (mode === 'Custom' && (this._chargingMode === 'ful' || this._chargingMode === 'bal' || this._chargingMode === 'max')) {
+            this._oldEndValue = readFileInt(this._endPath);
+            this._oldStartValue = readFileInt(this._startPath);
+            if (this._oldEndValue === this._endValue && this._oldStartValue === this._startValue) {
+                this.mode = this._chargingMode;
+                this.endLimitValue = this._endValue;
+                this.startLimitValue = this._startValue;
+                this.emit('threshold-applied', 'success');
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // libsmbios
+    async _setThresholdLimitLibSmbios() {
         let verified = await this._verifySmbiosThreshold();
         if (verified)
             return exitCode.SUCCESS;
 
-        if (this._chargingMode === 'adv' || this._chargingMode === 'exp') {
+        if (this._chargingMode === 'adv' || this._chargingMode === 'exp')
             await runCommandCtl(this.ctlPath, 'DELL_SMBIOS_WRITE', this._smbiosPath, this._chargingMode);
-        } else {
+        else
             await runCommandCtl(this.ctlPath, 'DELL_SMBIOS_WRITE', this._smbiosPath, `${this._startValue}`, `${this._endValue}`);
-        }
 
         verified = await this._verifySmbiosThreshold();
         if (verified)
@@ -121,16 +224,16 @@ export const DellSmBiosSingleBattery = GObject.registerClass({
         const firstLine = splitOutput[0].split(' ');
         if (firstLine[0] === 'Charging' && firstLine[1] === 'mode') {
             const modeRead = firstLine[2];
-            if (((modeRead === 'adaptive') && (this._chargingMode === 'adv')) || ((modeRead === 'express') && (this._chargingMode === 'exp'))) {
+            if (modeRead === 'adaptive' && this._chargingMode === 'adv' || modeRead === 'express' && this._chargingMode === 'exp') {
                 this.mode = this._chargingMode;
                 this.startLimitValue = 100;
                 this.endLimitValue = 95;
                 this.emit('threshold-applied', 'success');
                 return true;
-            } else if ((modeRead === 'custom') && ((this._chargingMode === 'ful') || (this._chargingMode === 'bal') || (this._chargingMode === 'max'))) {
+            } else if (modeRead === 'custom' && (this._chargingMode === 'ful' || this._chargingMode === 'bal' || this._chargingMode === 'max')) {
                 const secondLine = splitOutput[1].split(' ');
                 if (secondLine[0] === 'Charging' && secondLine[1] === 'interval') {
-                    if ((parseInt(secondLine[2]) === this._startValue) && (parseInt(secondLine[3]) === this._endValue)) {
+                    if (parseInt(secondLine[2]) === this._startValue && parseInt(secondLine[3]) === this._endValue) {
                         this.mode = this._chargingMode;
                         this.startLimitValue = this._startValue;
                         this.endLimitValue = this._endValue;
@@ -143,27 +246,11 @@ export const DellSmBiosSingleBattery = GObject.registerClass({
         return false;
     }
 
-    async setThresholdLimitCctk(chargingMode) {
-        this._chargingMode = chargingMode;
-
-        if (this._chargingMode !== 'adv' && this._chargingMode !== 'exp') {
-            this._endValue = this._settings.get_int(`current-${this._chargingMode}-end-threshold`);
-            this._startValue = this._settings.get_int(`current-${this._chargingMode}-start-threshold`);
-            if ((this._endValue - this._startValue) < 5)
-                this._startValue = this._endValue - 5;
-        }
-
+    // cctk
+    async _setThresholdLimitCctk() {
         const verified = await this._verifyCctkThreshold();
         if (verified)
             return exitCode.SUCCESS;
-
-        if (this._chargingMode === 'adv' || this._chargingMode === 'exp') {
-            this._arg1 = this._chargingMode;
-            this._arg2 = 'null';
-        } else {
-            this._arg1 = `${this._startValue}`;
-            this._arg2 = `${this._endValue}`;
-        }
 
         if (this._settings.get_boolean('need-bios-password'))
             this._writeCctkThresholdWithPassword();
@@ -189,9 +276,16 @@ export const DellSmBiosSingleBattery = GObject.registerClass({
         });
     }
 
-    async _writeCctkThreshold(arg3) {
-        const cmd = arg3 ? 'DELL_CCTK_AUTH_WRITE' : 'DELL_CCTK_WRITE';
-        const [status] = await runCommandCtl(this.ctlPath, cmd, this._cctkPath, this._arg1, this._arg2, arg3);
+    async _writeCctkThreshold(pass) {
+        let status;
+        const arg1 = this._chargingMode === 'adv' || this._chargingMode === 'exp' ? this._chargingMode : `${this._startValue}`;
+        const arg2 = this._chargingMode === 'adv' || this._chargingMode === 'exp' ? null : `${this._endValue}`;
+
+        if (pass)
+            [status] = await runCommandCtl(this.ctlPath, 'DELL_CCTK_AUTH_WRITE', this._cctkPath, pass, arg1, arg2);
+        else
+            [status] = await runCommandCtl(this.ctlPath, 'DELL_CCTK_WRITE', this._cctkPath, arg1, arg2);
+
         if (status === 65 || status === 58) {
             this.emit('threshold-applied', 'password-required');
             return exitCode.SUCCESS;
@@ -209,14 +303,14 @@ export const DellSmBiosSingleBattery = GObject.registerClass({
         const splitOutput = filteredOutput.split(' ');
         if (splitOutput[0] === 'PrimaryBattChargeCfg') {
             const modeRead = splitOutput[1];
-            if (((modeRead === 'Adaptive') && (this._chargingMode === 'adv')) || ((modeRead === 'Express') && (this._chargingMode === 'exp'))) {
+            if (modeRead === 'Adaptive' && this._chargingMode === 'adv' || modeRead === 'Express' && this._chargingMode === 'exp') {
                 this.mode = this._chargingMode;
                 this.startLimitValue = 100;
                 this.endLimitValue = 95;
                 this.emit('threshold-applied', 'success');
                 return true;
-            } else if ((modeRead === 'Custom') && ((this._chargingMode === 'ful') || (this._chargingMode === 'bal') || (this._chargingMode === 'max'))) {
-                if ((parseInt(splitOutput[2]) === this._startValue) && (parseInt(splitOutput[3]) === this._endValue)) {
+            } else if (modeRead === 'Custom' && (this._chargingMode === 'ful' || this._chargingMode === 'bal' || this._chargingMode === 'max')) {
+                if (parseInt(splitOutput[2]) === this._startValue && parseInt(splitOutput[3]) === this._endValue) {
                     this.mode = this._chargingMode;
                     this.startLimitValue = this._startValue;
                     this.endLimitValue = this._endValue;
