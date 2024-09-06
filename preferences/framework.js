@@ -3,6 +3,7 @@ import Adw from 'gi://Adw';
 import GLib from 'gi://GLib';
 import Gtk from 'gi://Gtk';
 import GObject from 'gi://GObject';
+import {gettext as _} from 'resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js';
 
 export const Framework = GObject.registerClass({
     GTypeName: 'BHC_Framework',
@@ -16,8 +17,8 @@ export const Framework = GObject.registerClass({
         super({});
         this._settings = settings;
         const configurationMapping = {
-            'sysfs': 'Sysfs node',
-            'framework-tool': 'Framework Tool',
+            'sysfs': _('Sysfs node'),
+            'framework-tool': _('Framework Tool'),
         };
 
         const supportedConfigs = this._settings.get_strv('multiple-configuration-supported');

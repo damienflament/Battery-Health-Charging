@@ -5,6 +5,7 @@ import GLib from 'gi://GLib';
 import GObject from 'gi://GObject';
 import Gtk from 'gi://Gtk';
 import Secret from 'gi://Secret';
+import {gettext as _} from 'resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js';
 
 export const Dell = GObject.registerClass({
     GTypeName: 'BHC_Dell',
@@ -23,9 +24,9 @@ export const Dell = GObject.registerClass({
         super({});
         this._settings = settings;
         const configurationMapping = {
-            'sysfs': 'Sysfs node',
-            'libsmbios': 'Libsmbios',
-            'cctk': 'Dell Command Center',
+            'sysfs': _('Sysfs node'),
+            'libsmbios': _('Libsmbios'),
+            'cctk': _('Dell Command Center'),
         };
 
         const showPackageOption = this._settings.get_strv('multiple-configuration-supported').length > 1;
