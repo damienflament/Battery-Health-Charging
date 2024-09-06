@@ -6,7 +6,7 @@ import GObject from 'gi://GObject';
 import {gettext as _} from 'resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js';
 
 import * as Helper from '../lib/helper.js';
-const {execCheck} = Helper;
+const {exitCode, execCheck} = Helper;
 
 export const General = GObject.registerClass({
     GTypeName: 'BHC_General',
@@ -186,9 +186,13 @@ export const General = GObject.registerClass({
         const [status, output] = await execCheck(argv, false);
         log(`Battery Health Charging: stdout = ${output}`);
         log(`Battery Health Charging: status = ${status}`);
+
+        if (status === exitCode.PRIVILEGE_REQUIRED)
+            return;
+
         const toast = new Adw.Toast();
         toast.set_timeout(3);
-        if (status === 0) {
+        if (status === exitCode.SUCCESS) {
             if (action === 'install' || action === 'update') {
                 this._settings.set_string('polkit-status', 'installed');
                 toast.set_title(_('Installation Successful.'));
@@ -199,7 +203,6 @@ export const General = GObject.registerClass({
         } else {
             toast.set_title(_('Encountered an unexpected error.'));
         }
-        if (status !== 126)
-            this.root.add_toast(toast);
+        this.root.add_toast(toast);
     }
 });

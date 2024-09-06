@@ -21,7 +21,7 @@ RESOURCES_DIR='resources'
 
 EXIT_SUCCESS=0
 EXIT_ERROR=1
-EXIT_MUST_BE_ROOT=126
+EXIT_PRIVILEGE_REQUIRED=126
 
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)" #stackoverflow 59895
 
@@ -128,7 +128,7 @@ if [ "$ACTION" = "install" ]; then
         echo "The install action must be run as root for security reasons!"
         echo "Please have a look at https://github.com/martin31821/cpupower/issues/102"
         echo "for further details."
-        exit ${EXIT_MUST_BE_ROOT}
+        exit ${EXIT_PRIVILEGE_REQUIRED}
     fi
 
     echo -n "Installing ${TOOL_NAME} tool... "
