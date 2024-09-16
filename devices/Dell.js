@@ -12,11 +12,11 @@ const DELL_PATH = '/sys/devices/platform/dell-laptop';
 const SMBIOS_PATH = '/usr/sbin/smbios-battery-ctl';
 const CCTK_PATH = '/opt/dell/dcc/cctk';
 
-const BAT0_CHARGETYPE_PATH = '/sys/class/power_supply/BAT0/charge_types';
+const BAT0_CHARGETYPES_PATH = '/sys/class/power_supply/BAT0/charge_types';
 const BAT0_END_PATH = '/sys/class/power_supply/BAT0/charge_control_end_threshold';
 const BAT0_START_PATH = '/sys/class/power_supply/BAT0/charge_control_start_threshold';
 
-const BAT1_CHARGETYPE_PATH = '/sys/class/power_supply/BAT1/charge_types';
+const BAT1_CHARGETYPES_PATH = '/sys/class/power_supply/BAT1/charge_types';
 const BAT1_END_PATH = '/sys/class/power_supply/BAT1/charge_control_end_threshold';
 const BAT1_START_PATH = '/sys/class/power_supply/BAT1/charge_control_start_threshold';
 
@@ -65,12 +65,12 @@ export const DellSmBiosSingleBattery = GObject.registerClass({
 
         this._supportedConfiguration = [];
 
-        const usesBAT0 = fileExists(BAT0_CHARGETYPE_PATH);
-        const usesBAT1 = fileExists(BAT1_CHARGETYPE_PATH);
+        const usesBAT0 = fileExists(BAT0_CHARGETYPES_PATH);
+        const usesBAT1 = fileExists(BAT1_CHARGETYPES_PATH);
 
         if (usesBAT0 || usesBAT1) {
             this._supportedConfiguration.push('sysfs');
-            this._chargeTypesPath = usesBAT0 ? BAT0_CHARGETYPE_PATH : BAT1_CHARGETYPE_PATH;
+            this._chargeTypesPath = usesBAT0 ? BAT0_CHARGETYPES_PATH : BAT1_CHARGETYPES_PATH;
             this._endPath = usesBAT0 ? BAT0_END_PATH : BAT1_END_PATH;
             this._startPath = usesBAT0 ? BAT0_START_PATH : BAT1_START_PATH;
             this._dellEndStartCmd = usesBAT0 ? 'DELL_BAT0_END_START' : 'DELL_BAT1_END_START';
@@ -178,8 +178,8 @@ export const DellSmBiosSingleBattery = GObject.registerClass({
     }
 
     _verifySysFsThreshold() {
-        const chargeType = readFile(this._chargeTypesPath);
-        const mode = chargeType?.substring(chargeType.indexOf('[') + 1, chargeType.lastIndexOf(']'));
+        const chargeTypes = readFile(this._chargeTypesPath);
+        const mode = chargeTypes?.substring(chargeTypes.indexOf('[') + 1, chargeTypes.lastIndexOf(']'));
         if (mode === 'Adaptive' && this._chargingMode === 'adv' || mode === 'Fast' && this._chargingMode === 'exp') {
             this.mode = this._chargingMode;
             this.endLimitValue = 100;
