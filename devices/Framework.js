@@ -42,7 +42,7 @@ export const FrameworkSingleBatteryBAT1 = GObject.registerClass({
     }
 
     isAvailable() {
-        if (!readFile('/sys/devices/virtual/dmi/id/sys_vendor').includes('Framework'))
+        if (!readFile('/sys/devices/virtual/dmi/id/sys_vendor')?.includes('Framework'))
             return false;
 
         this._supportedConfiguration = [];

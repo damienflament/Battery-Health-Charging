@@ -328,7 +328,7 @@ export const ThinkpadSingleBatteryBAT0 = GObject.registerClass({
 
     _readForceDischargeMode() {
         const forceDischargeModeRead = readFile(BAT0_FORCE_DISCHARGE_PATH);
-        return forceDischargeModeRead.substring(
+        return forceDischargeModeRead?.substring(
             forceDischargeModeRead.indexOf('[') + 1,
             forceDischargeModeRead.lastIndexOf(']')
         );
@@ -526,7 +526,7 @@ export const ThinkpadSingleBatteryBAT1 = GObject.registerClass({
 
     _readForceDischargeMode() {
         const forceDischargeModeRead = readFile(BAT1_FORCE_DISCHARGE_PATH);
-        return forceDischargeModeRead.substring(
+        return forceDischargeModeRead?.substring(
             forceDischargeModeRead.indexOf('[') + 1,
             forceDischargeModeRead.lastIndexOf(']')
         );

@@ -50,7 +50,7 @@ export const ChromebookSingleBattery = GObject.registerClass({
     }
 
     isAvailable() {
-        if (!readFile('/sys/devices/virtual/dmi/id/sys_vendor').includes('Google'))
+        if (!readFile('/sys/devices/virtual/dmi/id/sys_vendor')?.includes('Google'))
             return false;
 
         this._supportedConfiguration = [];

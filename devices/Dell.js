@@ -179,7 +179,7 @@ export const DellSmBiosSingleBattery = GObject.registerClass({
 
     _verifySysFsThreshold() {
         const chargeType = readFile(this._chargeTypesPath);
-        const mode = chargeType && chargeType.substring(chargeType.indexOf('[') + 1, chargeType.lastIndexOf(']'));
+        const mode = chargeType?.substring(chargeType.indexOf('[') + 1, chargeType.lastIndexOf(']'));
         if (mode === 'Adaptive' && this._chargingMode === 'adv' || mode === 'Fast' && this._chargingMode === 'exp') {
             this.mode = this._chargingMode;
             this.endLimitValue = 100;
