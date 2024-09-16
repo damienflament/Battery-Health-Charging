@@ -8,16 +8,26 @@ permalink: /changelogs
 # Changelogs
 
 {: .important-title }
-> GN-45_Version 63 &emsp;&emsp; Jun 18, 2024
+> GN-45_Version 65 &emsp;&emsp; Sep 15, 2024
+> * Add support for Gnome-shell 47
+> * Fixed opening of readme through notification
+
+{: .note-title }
+> GN-44_Version 64 &emsp;&emsp; Sep 15, 2024
+> * Fixed opening of readme through notification
+
+{: .important-title }
+> GN-45_Version 63 &emsp;&emsp; Jul 07, 2024
+> * Add Italian translations credit: albanobattistella
 > * Add Hebrew translations credit: omeritzics@crowdin
 > * Fujitsu: Support Fujitsu laptops.
 > * Hungarian translation contribution credit:  ViBE-HU
 > * system76: Add additional checks for system76
 > * thinkpad: Skip Verification option, workaround for quirky firmware.
 
-
 {: .note-title }
-> GN-44_Version 62 &emsp;&emsp; Jun 18, 2024
+> GN-44_Version 62 &emsp;&emsp; Jul 07, 2024
+> * Add Italian translations credit: albanobattistella
 > * Add Hebrew translations credit: omeritzics@crowdin
 > * Fujitsu: Support Fujitsu laptops.
 > * Hungarian translation contribution credit:  ViBE-HU
