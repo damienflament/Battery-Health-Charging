@@ -179,7 +179,7 @@ export const DellSmBiosSingleBattery = GObject.registerClass({
 
     _verifySysFsThreshold() {
         const chargeTypes = readFile(this._chargeTypesPath);
-        const mode = chargeTypes?.substring(chargeTypes.indexOf('[') + 1, chargeTypes.lastIndexOf(']'));
+        const mode = chargeTypes?.substring(chargeTypes?.indexOf('[') + 1, chargeTypes?.lastIndexOf(']'));
         if (mode === 'Adaptive' && this._chargingMode === 'adv' || mode === 'Fast' && this._chargingMode === 'exp') {
             this.mode = this._chargingMode;
             this.endLimitValue = 100;
@@ -232,30 +232,29 @@ export const DellSmBiosSingleBattery = GObject.registerClass({
             return false;
         }
 
-        const filteredOutput = output.trim().replace('(', '').replace(')', '').replace(',', '').replace(/:/g, '');
-        const splitOutput = filteredOutput.split('\n');
-        const firstLine = splitOutput[0].split(' ');
-        if (firstLine[0] === 'Charging' && firstLine[1] === 'mode') {
-            const modeRead = firstLine[2];
-            if (modeRead === 'adaptive' && this._chargingMode === 'adv' || modeRead === 'express' && this._chargingMode === 'exp') {
+        const modeMatch = output?.match(/Charging mode:\s*(\w+)/);
+        if (modeMatch) {
+            const mode = modeMatch[1];
+            if (mode === 'adaptive' && this._chargingMode === 'adv' || mode === 'express' && this._chargingMode === 'exp') {
                 this.mode = this._chargingMode;
                 this.startLimitValue = 100;
                 this.endLimitValue = 95;
                 this.emit('threshold-applied', 'success');
                 return true;
-            } else if (modeRead === 'custom' && (this._chargingMode === 'ful' || this._chargingMode === 'bal' || this._chargingMode === 'max')) {
-                const secondLine = splitOutput[1].split(' ');
-                if (secondLine[0] === 'Charging' && secondLine[1] === 'interval') {
-                    if (parseInt(secondLine[2]) === this._startValue && parseInt(secondLine[3]) === this._endValue) {
-                        this.mode = this._chargingMode;
-                        this.startLimitValue = this._startValue;
-                        this.endLimitValue = this._endValue;
-                        this.emit('threshold-applied', 'success');
-                        return true;
-                    }
+            } else if (mode === 'custom' &&
+               (this._chargingMode === 'ful' || this._chargingMode === 'bal' || this._chargingMode === 'max')) {
+                const thresholdMatch = output?.match(/Charging interval:\s*\((\d+),\s*(\d+)\)/);
+                if (thresholdMatch && parseInt(thresholdMatch[1]) === this._startValue &&
+                 parseInt(thresholdMatch[2]) === this._endValue) {
+                    this.mode = this._chargingMode;
+                    this.startLimitValue = this._startValue;
+                    this.endLimitValue = this._endValue;
+                    this.emit('threshold-applied', 'success');
+                    return true;
                 }
             }
         }
+
         return false;
     }
 
@@ -283,7 +282,7 @@ export const DellSmBiosSingleBattery = GObject.registerClass({
             try {
                 const pass = Secret.password_lookup_finish(result);
                 this._writeCctkThreshold(pass);
-            } catch (e) {
+            } catch {
                 log('Battery Health Charging: Failed to lookup password from Gnome Keyring');
             }
         });
@@ -321,18 +320,19 @@ export const DellSmBiosSingleBattery = GObject.registerClass({
             this._emitThresholdError(status);
             return false;
         }
-        const filteredOutput = output.trim().replace('=', ' ').replace(':', ' ').replace('-', ' ');
-        const splitOutput = filteredOutput.split(' ');
-        if (splitOutput[0] === 'PrimaryBattChargeCfg') {
-            const modeRead = splitOutput[1];
-            if (modeRead === 'Adaptive' && this._chargingMode === 'adv' || modeRead === 'Express' && this._chargingMode === 'exp') {
+
+        const modeMatch = output?.match(/PrimaryBattChargeCfg=(\w+)(?::(\d+)-(\d+))?/);
+        if (modeMatch) {
+            const mode = modeMatch[1];
+            if (mode === 'Adaptive' && this._chargingMode === 'adv' ||
+                mode === 'Express' && this._chargingMode === 'exp') {
                 this.mode = this._chargingMode;
                 this.startLimitValue = 100;
                 this.endLimitValue = 95;
                 this.emit('threshold-applied', 'success');
                 return true;
-            } else if (modeRead === 'Custom' && (this._chargingMode === 'ful' || this._chargingMode === 'bal' || this._chargingMode === 'max')) {
-                if (parseInt(splitOutput[2]) === this._startValue && parseInt(splitOutput[3]) === this._endValue) {
+            } else if (mode === 'Custom' && (this._chargingMode === 'ful' || this._chargingMode === 'bal' || this._chargingMode === 'max')) {
+                if (parseInt(modeMatch[2]) === this._startValue && parseInt(modeMatch[3]) === this._endValue) {
                     this.mode = this._chargingMode;
                     this.startLimitValue = this._startValue;
                     this.endLimitValue = this._endValue;

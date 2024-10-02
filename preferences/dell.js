@@ -96,7 +96,7 @@ export const Dell = GObject.registerClass({
             'Battery Health Charging Bios Password', pass, null, (o, result) => {
                 try {
                     this._status = Secret.password_store_finish(result);
-                } catch (e) {
+                } catch {
                     log('Battery Health Charging: Failed to store password on Gnome Keyring');
                     this._status = false;
                 }
@@ -116,7 +116,7 @@ export const Dell = GObject.registerClass({
         Secret.password_clear(this._secretSchema, {'string': 'Battery-Health-Charging-Gnome-Extension'}, null, (o, result) => {
             try {
                 Secret.password_clear_finish(result);
-            } catch (e) {
+            } catch {
                 log('Battery Health Charging: Failed to clear password from Gnome Keyring');
             }
         });

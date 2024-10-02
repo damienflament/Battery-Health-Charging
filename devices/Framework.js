@@ -168,14 +168,11 @@ export const FrameworkSingleBatteryBAT1 = GObject.registerClass({
     }
 
     _verifyFrameworkToolThreshold(output) {
-        const matchOutput = output.trim().match(/Minimum 0%, Maximum (\d+)%/);
-        if (matchOutput) {
-            const endValue = parseInt(matchOutput[1]);
-            if (!isNaN(endValue) && endValue > 0 && endValue <= 100 && this._endValue ===  endValue) {
-                this.endLimitValue = this._endValue;
-                this.emit('threshold-applied', 'success');
-                return true;
-            }
+        const matchOutput = output?.match(/Minimum 0%, Maximum (\d+)%/);
+        if (matchOutput && this._endValue === parseInt(matchOutput[1])) {
+            this.endLimitValue = this._endValue;
+            this.emit('threshold-applied', 'success');
+            return true;
         }
         return false;
     }

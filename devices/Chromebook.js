@@ -194,17 +194,12 @@ export const ChromebookSingleBattery = GObject.registerClass({
             return false;
         }
 
-        const matchOutput = output.match(/Battery sustainer = on \((\d+)% ~ (\d+)%\)/);
-        if (matchOutput) {
-            const startValue = parseInt(matchOutput[1]);
-            const endValue = parseInt(matchOutput[2]);
-            if (!isNaN(endValue) && endValue > 0 && endValue <= 100 && this._endValue ===  endValue &&
-                (!isNaN(startValue) && startValue > 0 && startValue <= 100 && this._startValue ===  startValue)) {
-                this.endLimitValue = this._endValue;
-                this.startLimitValue = this._startValue;
-                this.emit('threshold-applied', 'success');
-                return true;
-            }
+        const matchOutput = output?.match(/Battery sustainer = on \((\d+)% ~ (\d+)%\)/);
+        if (matchOutput && this._endValue === parseInt(matchOutput[2]) && this._startValue === parseInt(matchOutput[1])) {
+            this.endLimitValue = this._endValue;
+            this.startLimitValue = this._startValue;
+            this.emit('threshold-applied', 'success');
+            return true;
         }
         return false;
     }

@@ -45,51 +45,42 @@ export const  RazerSingleBattery = GObject.registerClass({
     }
 
     async setThresholdLimit(chargingMode) {
-        let output, filteredOutput, splitOutput, firstLine, razerWriteCommand;
+        let output, razerWriteCommand;
         const endValue = this._settings.get_int(`current-${chargingMode}-end-threshold`);
 
         const razerReadCommand = ['razer-cli', 'read', 'bho'];
         [, output] = await execCheck(razerReadCommand);
-        filteredOutput = output.trim().replace('{ ', '').replace(' }', '').replace(',', '').replace(/:/g, '');
-        splitOutput = filteredOutput.split('\n');
-        firstLine = splitOutput[0].split(' ');
-        if (firstLine[0] === 'RES' && firstLine[1] === 'GetBatteryHealthOptimizer' && firstLine[2] === 'is_on') {
-            if (endValue === 100 && firstLine[3] === 'false' ||
-                endValue !== 100 && firstLine[3] === 'true' && parseInt(firstLine[5]) === endValue) {
-                this.endLimitValue = endValue;
-                this.emit('threshold-applied', 'success');
-                return exitCode.SUCCESS;
-            }
+        if (endValue === 100 && output?.includes('Battery health optimization is off')) {
+            this.endLimitValue = endValue;
+            this.emit('threshold-applied', 'success');
+            return exitCode.SUCCESS;
         }
+        let matchOutput = output?.match(/Battery health optimization is on with a threshold of (\d+)/);
+        if (matchOutput && endValue === parseInt(matchOutput[1])) {
+            this.endLimitValue = endValue;
+            this.emit('threshold-applied', 'success');
+            return exitCode.SUCCESS;
+        }
+
         if (endValue === 100)
             razerWriteCommand = ['razer-cli', 'write', 'bho', 'off'];
         else
             razerWriteCommand = ['razer-cli', 'write', 'bho', 'on', `${endValue}`];
 
         [, output] = await execCheck(razerWriteCommand);
-        filteredOutput = output.trim().replace('{ ', '').replace(' }', '').replace(/:/g, '');
-        splitOutput = filteredOutput.split('\n');
-        firstLine = splitOutput[0].split(' ');
-        const secondLine = splitOutput[1].split(' ');
-        if (firstLine[0] === 'RES' && firstLine[1] === 'SetBatteryHealthOptimizer' &&
-            firstLine[2] === 'result' && firstLine[3] === 'true') {
-            if (endValue === 100 &&
-                secondLine[0] === 'Successfully' &&
-                secondLine[1] === 'turned' &&
-                secondLine[2] === 'off' &&
-                secondLine[3] === 'bho' ||
-                endValue !== 100 &&
-                 secondLine[0] === 'Battery' &&
-                 secondLine[1] === 'health' &&
-                secondLine[2] === 'optimization' &&
-                secondLine[4] === 'on' &&
-                parseInt(secondLine[9]) === endValue) {
-                this.mode = chargingMode;
-                this.endLimitValue = endValue;
-                this.emit('threshold-applied', 'success');
-                return exitCode.SUCCESS;
-            }
+        if (endValue === 100 && output?.includes('Successfully turned off bho')) {
+            this.endLimitValue = 100;
+            this.emit('threshold-applied', 'success');
+            return exitCode.SUCCESS;
         }
+
+        matchOutput = output?.match(/Battery health optimization is on with a threshold of (\d+)/);
+        if (matchOutput && endValue === parseInt(matchOutput[1])) {
+            this.endLimitValue = endValue;
+            this.emit('threshold-applied', 'success');
+            return exitCode.SUCCESS;
+        }
+
         this.emit('threshold-applied', 'not-updated');
         return exitCode.ERROR;
     }
