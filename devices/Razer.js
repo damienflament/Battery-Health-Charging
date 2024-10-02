@@ -3,7 +3,7 @@
 import GLib from 'gi://GLib';
 import GObject from 'gi://GObject';
 import * as Helper from '../lib/helper.js';
-const {exitCode, execCheck} = Helper;
+const {dmiVendor, exitCode, execCheck} = Helper;
 
 export const  RazerSingleBattery = GObject.registerClass({
     Signals: {'threshold-applied': {param_types: [GObject.TYPE_STRING]}},
@@ -37,6 +37,8 @@ export const  RazerSingleBattery = GObject.registerClass({
     }
 
     isAvailable() {
+        if (!dmiVendor()?.includes('Razer'))
+            return false;
         if (!GLib.find_program_in_path('razer-cli'))
             return false;
         return true;
