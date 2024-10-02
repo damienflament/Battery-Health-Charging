@@ -6,7 +6,6 @@ import * as Helper from '../lib/helper.js';
 
 const {dmiVendor, exitCode, fileExists, readFileInt, runCommandCtl} = Helper;
 
-const VENDOR_SYSTEM76 = '/sys/module/system76_acpi';
 const BAT0_END_PATH = '/sys/class/power_supply/BAT0/charge_control_end_threshold';
 const BAT0_START_PATH = '/sys/class/power_supply/BAT0/charge_control_start_threshold';
 
@@ -49,8 +48,6 @@ export const System76SingleBattery = GObject.registerClass({
     }
 
     isAvailable() {
-        if (!fileExists(VENDOR_SYSTEM76))
-            return false;
         if (!dmiVendor()?.includes('System76'))
             return false;
         if (!fileExists(BAT0_START_PATH))
