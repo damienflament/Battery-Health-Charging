@@ -93,9 +93,9 @@ export const HuaweiSingleBattery = GObject.registerClass({
 
     _verifyThreshold() {
         this._limitValue = readFile(HUAWEI_PATH).split(' ');
-        if (this._endValue === parseInt(this._limitValue[1]) && this._startValue === parseInt(this._limitValue[0])) {
-            this.endLimitValue = this._endValue;
-            this.startLimitValue = this._startValue;
+        this.endLimitValue = parseInt(this._limitValue[1]);
+        this.startLimitValue = parseInt(this._limitValue[0]);
+        if (this._endValue === this.endLimitValue && this._startValue === this.startLimitValue) {
             this.emit('threshold-applied', 'success');
             return true;
         }

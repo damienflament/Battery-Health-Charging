@@ -41,6 +41,8 @@ export const ToshibaSingleBatteryBAT0 = GObject.registerClass({
             return false;
         if (!fileExists(BAT0_END_PATH))
             return false;
+
+        this.endLimitValue = readFileInt(this._endPath);
         return true;
     }
 
@@ -59,8 +61,8 @@ export const ToshibaSingleBatteryBAT0 = GObject.registerClass({
             return exitCode.ERROR;
         }
 
-        if (endValue === readFileInt(BAT0_END_PATH)) {
-            this.endLimitValue = endValue;
+        this.endLimitValue = readFileInt(BAT0_END_PATH);
+        if (endValue === this.endLimitValue) {
             this.emit('threshold-applied', 'success');
             return exitCode.SUCCESS;
         }
@@ -77,8 +79,8 @@ export const ToshibaSingleBatteryBAT0 = GObject.registerClass({
         });
         this._delayReadTimeoutId = null;
 
-        if (endValue === readFileInt(BAT0_END_PATH)) {
-            this.endLimitValue = endValue;
+        this.endLimitValue = readFileInt(BAT0_END_PATH);
+        if (endValue === this.endLimitValue) {
             this.emit('threshold-applied', 'success');
             return exitCode.SUCCESS;
         } else if (endValue === 80 && readFileInt(BAT0_CAPACITY_PATH) > 75) {
@@ -126,6 +128,8 @@ export const ToshibaSingleBatteryBAT1 = GObject.registerClass({
             return false;
         if (!fileExists(BAT1_END_PATH))
             return false;
+
+        this.endLimitValue = readFileInt(BAT1_END_PATH);
         return true;
     }
 
@@ -144,8 +148,8 @@ export const ToshibaSingleBatteryBAT1 = GObject.registerClass({
             return exitCode.ERROR;
         }
 
-        if (endValue === readFileInt(BAT1_END_PATH)) {
-            this.endLimitValue = endValue;
+        this.endLimitValue = readFileInt(BAT1_END_PATH);
+        if (endValue === this.endLimitValue) {
             this.emit('threshold-applied', 'success');
             return exitCode.SUCCESS;
         }
@@ -162,11 +166,12 @@ export const ToshibaSingleBatteryBAT1 = GObject.registerClass({
         });
         this._delayReadTimeoutId = null;
 
-        if (endValue === readFileInt(BAT1_END_PATH)) {
-            this.endLimitValue = endValue;
+        this.endLimitValue = readFileInt(BAT1_END_PATH);
+        if (endValue === this.endLimitValue) {
             this.emit('threshold-applied', 'success');
             return exitCode.SUCCESS;
         } else if (endValue === 80 && readFileInt(BAT1_CAPACITY_PATH) > 75) {
+            this.endLimitValue = 100;
             this.emit('threshold-applied', 'discharge-battery');
             return exitCode.SUCCESS;
         }

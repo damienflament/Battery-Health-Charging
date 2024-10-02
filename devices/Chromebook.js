@@ -47,6 +47,8 @@ export const ChromebookSingleBattery = GObject.registerClass({
 
         this._settings = settings;
         this.ctlPath = null;
+        this.endLimitValue = -1;
+        this.startLimitValue = -1;
     }
 
     isAvailable() {
@@ -127,7 +129,7 @@ export const ChromebookSingleBattery = GObject.registerClass({
             return exitCode.SUCCESS;
 
         // Some device wont update end threshold if start threshold > end threshold
-        const cmd = this._startValue >= this._oldEndValue ? this._chromebookEndStartCmd : this._chromebookStartEndCmd;
+        const cmd = this._startValue >= this.endLimitValue ? this._chromebookEndStartCmd : this._chromebookStartEndCmd;
         const [status] = await runCommandCtl(this.ctlPath, cmd, `${this._endValue}`, `${this._startValue}`);
         if (status !== exitCode.SUCCESS) {
             this._emitThresholdError(status);
@@ -157,11 +159,9 @@ export const ChromebookSingleBattery = GObject.registerClass({
     }
 
     _verifySysFsThreshold() {
-        this._oldEndValue = readFileInt(this._endPath);
-        this._oldStartValue = readFileInt(this._startPath);
-        if (this._oldEndValue === this._endValue && this._oldStartValue === this._startValue) {
-            this.endLimitValue = this._endValue;
-            this.startLimitValue = this._startValue;
+        this.endLimitValue = readFileInt(this._endPath);
+        this.startLimitValue = readFileInt(this._startPath);
+        if (this.endLimitValue === this._endValue && this.startLimitValue === this._startValue) {
             this.emit('threshold-applied', 'success');
             return true;
         }

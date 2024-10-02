@@ -77,12 +77,9 @@ export const AcerSingleBattery = GObject.registerClass({
     }
 
     _verifyThreshold() {
-        const endLimitValue = readFileInt(ACER_PATH);
-        if (this._healthMode === endLimitValue) {
-            if (endLimitValue === 1)
-                this.endLimitValue = 80;
-            else
-                this.endLimitValue = 100;
+        const healthMode = readFileInt(ACER_PATH);
+        this.endLimitValue = healthMode === 1 ? 80 : 100;
+        if (this._healthMode === healthMode) {
             this.emit('threshold-applied', 'success');
             return true;
         }

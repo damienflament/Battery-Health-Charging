@@ -39,6 +39,7 @@ export const FrameworkSingleBatteryBAT1 = GObject.registerClass({
 
         this._settings = settings;
         this.ctlPath = null;
+        this.endLimitValue = -1;
     }
 
     isAvailable() {

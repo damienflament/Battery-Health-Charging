@@ -77,10 +77,8 @@ export const SonySingleBattery = GObject.registerClass({
             return exitCode.ERROR;
         }
 
-        if (this._verifyThreshold()) {
-            this._updateHighSpeedCharging = false;
+        if (this._verifyThreshold())
             return exitCode.SUCCESS;
-        }
 
         if (this._delayReadTimeoutId)
             GLib.source_remove(this._delayReadTimeoutId);
@@ -94,10 +92,8 @@ export const SonySingleBattery = GObject.registerClass({
         });
         this._delayReadTimeoutId = null;
 
-        if (this._verifyThreshold()) {
-            this._updateHighSpeedCharging = false;
+        if (this._verifyThreshold())
             return exitCode.SUCCESS;
-        }
 
         this.emit('threshold-applied', 'not-updated');
         return exitCode.ERROR;
@@ -108,12 +104,12 @@ export const SonySingleBattery = GObject.registerClass({
             this._updateHighSpeedCharging = true;
             return false;
         }
+        this._updateHighSpeedCharging = false;
         const endLimitValue  = readFileInt(SONY_PATH);
+        this.endLimitValue = endLimitValue === 0 ? 100 : endLimitValue;
         if (this._batteryCareLimiter !== endLimitValue)
             return false;
-        this._updateHighSpeedCharging = false;
         this.mode = this._chargingMode;
-        this.endLimitValue = endLimitValue === 0 ? 100 : endLimitValue;
         this.emit('threshold-applied', 'success');
         return true;
     }

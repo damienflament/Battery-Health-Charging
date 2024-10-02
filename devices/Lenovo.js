@@ -37,15 +37,16 @@ export const LenovoSingleBattery = GObject.registerClass({
 
     async setThresholdLimit(chargingMode) {
         this._chargingMode = chargingMode;
+        let conservationMode;
         if (this._chargingMode === 'ful')
-            this._conservationMode = 0;
+            conservationMode = 0;
         else if (this._chargingMode === 'max')
-            this._conservationMode = 1;
+            conservationMode = 1;
 
         if (this._verifyThreshold())
             return exitCode.SUCCESS;
 
-        const [status] = await runCommandCtl(this.ctlPath, 'LENOVO', `${this._conservationMode}`);
+        const [status] = await runCommandCtl(this.ctlPath, 'LENOVO', `${conservationMode}`);
         if (status === exitCode.ERROR) {
             this.emit('threshold-applied', 'error');
             return exitCode.ERROR;
@@ -77,8 +78,8 @@ export const LenovoSingleBattery = GObject.registerClass({
     }
 
     _verifyThreshold() {
-        if (readFileInt(LENOVO_PATH) === this._conservationMode) {
-            this.mode = this._chargingMode;
+        this.mode = readFileInt(LENOVO_PATH) === 1 ? 'max' : 'ful';
+        if (this.mode === this._chargingMode) {
             this.emit('threshold-applied', 'success');
             return true;
         }

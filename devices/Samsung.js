@@ -36,10 +36,9 @@ export const SamsungSingleBattery = GObject.registerClass({
     }
 
     async setThresholdLimit(chargingMode) {
-        this._chargingMode = chargingMode;
-        if (this._chargingMode === 'ful')
+        if (chargingMode === 'ful')
             this._batteryLifeExtender = 0;
-        else if (this._chargingMode === 'max')
+        else if (chargingMode === 'max')
             this._batteryLifeExtender = 1;
 
         if (this._verifyThreshold())
@@ -77,8 +76,9 @@ export const SamsungSingleBattery = GObject.registerClass({
     }
 
     _verifyThreshold() {
-        if (readFileInt(SAMSUNG_PATH) === this._batteryLifeExtender) {
-            this.mode = this._chargingMode;
+        const batteryLifeExtender = readFileInt(SAMSUNG_PATH);
+        this.mode = batteryLifeExtender === 1 ? 'max' : 'ful';
+        if (this._batteryLifeExtender === batteryLifeExtender) {
             this.emit('threshold-applied', 'success');
             return true;
         }

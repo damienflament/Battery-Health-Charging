@@ -41,6 +41,7 @@ export const AsusSingleBatteryBAT0 = GObject.registerClass({
 
         this._settings = settings;
         this.ctlPath = null;
+        this.endLimitValue = -1;
     }
 
     isAvailable() {
@@ -130,6 +131,7 @@ export const AsusSingleBatteryBAT1 = GObject.registerClass({
 
         this._settings = settings;
         this.ctlPath = null;
+        this.endLimitValue = -1;
     }
 
     isAvailable() {
@@ -219,6 +221,7 @@ export const AsusSingleBatteryBATC = GObject.registerClass({
 
         this._settings = settings;
         this.ctlPath = null;
+        this.endLimitValue = -1;
     }
 
     isAvailable() {
@@ -308,6 +311,7 @@ export const AsusSingleBatteryBATT = GObject.registerClass({
 
         this._settings = settings;
         this.ctlPath = null;
+        this.endLimitValue = -1;
     }
 
     isAvailable() {

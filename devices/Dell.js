@@ -57,6 +57,8 @@ export const DellSmBiosSingleBattery = GObject.registerClass({
 
         this._settings = settings;
         this.ctlPath = null;
+        this.endLimitValue = -1;
+        this.startLimitValue = -1;
     }
 
     isAvailable() {

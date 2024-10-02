@@ -186,4 +186,3 @@ export const FujitsuSingleBatteryCMB1 = GObject.registerClass({
     }
 });
 
-

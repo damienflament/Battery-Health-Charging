@@ -36,10 +36,9 @@ export const PanasonicSingleBattery = GObject.registerClass({
     }
 
     async setThresholdLimit(chargingMode) {
-        this._chargingMode = chargingMode;
-        if (this._chargingMode === 'ful')
+        if (chargingMode === 'ful')
             this._ecoMode = 0;
-        else if (this._chargingMode === 'max')
+        else if (chargingMode === 'max')
             this._ecoMode = 1;
 
         if (this._verifyThreshold())
@@ -77,8 +76,9 @@ export const PanasonicSingleBattery = GObject.registerClass({
     }
 
     _verifyThreshold() {
-        if (readFileInt(PANASONIC_PATH) === this._ecoMode) {
-            this.mode = this._chargingMode;
+        const ecoMode = readFileInt(PANASONIC_PATH);
+        this.mode = ecoMode === 1 ? 'max' : 'ful';
+        if (this._ecoMode === ecoMode) {
             this.emit('threshold-applied', 'success');
             return true;
         }
