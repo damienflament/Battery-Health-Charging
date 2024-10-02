@@ -4,7 +4,7 @@ import GLib from 'gi://GLib';
 import GObject from 'gi://GObject';
 import * as Helper from '../lib/helper.js';
 
-const {exitCode, fileExists, findValidProgramInPath, readFileInt, readFile, runCommandCtl} = Helper;
+const {dmiVendor, exitCode, fileExists, findValidProgramInPath, readFileInt, runCommandCtl} = Helper;
 
 const BAT1_END_PATH = '/sys/class/power_supply/BAT1/charge_control_end_threshold';
 const FRAMEWORK_TOOL_PATH = '/usr/bin/framework_tool';
@@ -42,7 +42,7 @@ export const FrameworkSingleBatteryBAT1 = GObject.registerClass({
     }
 
     isAvailable() {
-        if (!readFile('/sys/devices/virtual/dmi/id/sys_vendor')?.includes('Framework'))
+        if (!dmiVendor()?.includes('Framework'))
             return false;
 
         this._supportedConfiguration = [];

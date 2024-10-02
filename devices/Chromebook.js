@@ -4,7 +4,7 @@ import GLib from 'gi://GLib';
 import GObject from 'gi://GObject';
 import * as Helper from '../lib/helper.js';
 
-const {exitCode, fileExists, findValidProgramInPath, readFileInt, readFile, runCommandCtl} = Helper;
+const {dmiVendor, exitCode, fileExists, findValidProgramInPath, readFileInt, runCommandCtl} = Helper;
 
 const BAT0_END_PATH = '/sys/class/power_supply/BAT0/charge_control_end_threshold';
 const BAT0_START_PATH = '/sys/class/power_supply/BAT0/charge_control_start_threshold';
@@ -50,7 +50,7 @@ export const ChromebookSingleBattery = GObject.registerClass({
     }
 
     isAvailable() {
-        if (!readFile('/sys/devices/virtual/dmi/id/sys_vendor')?.includes('Google'))
+        if (!dmiVendor()?.includes('Google'))
             return false;
 
         this._supportedConfiguration = [];
