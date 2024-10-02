@@ -6,7 +6,7 @@ import * as Helper from '../lib/helper.js';
 
 const {exitCode, fileExists, readFileInt, runCommandCtl} = Helper;
 
-const VENDOR_SYSTEM76 = '/sys/module/librem_ec';
+const VENDOR_LIBREM = '/sys/module/librem_ec';
 const BAT0_END_PATH = '/sys/class/power_supply/BAT0/charge_control_end_threshold';
 const BAT0_START_PATH = '/sys/class/power_supply/BAT0/charge_control_start_threshold';
 
@@ -49,7 +49,7 @@ export const LibremSingleBatteryBAT0 = GObject.registerClass({
     }
 
     isAvailable() {
-        if (!fileExists(VENDOR_SYSTEM76))
+        if (!fileExists(VENDOR_LIBREM))
             return false;
         if (!fileExists(BAT0_START_PATH))
             return false;
