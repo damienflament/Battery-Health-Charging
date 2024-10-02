@@ -124,6 +124,7 @@ function validate_path() {
         "/run/wrapper/bin/"
         "/run/current-system/sw/bin/"
         "/nix/store/"
+        "/etc/profiles/per-user/"
     )
     for BASEPATH in "${VALIDPATHS[@]}"; do
         if [[ "$TOOLPATH" == "${BASEPATH}"* && "$TOOLPATH" == *"$TOOLNAME" ]]; then
