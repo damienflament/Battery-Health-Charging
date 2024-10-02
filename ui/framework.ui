@@ -15,7 +15,6 @@
             <child>
               <object class="GtkDropDown" id="choose_configuration">
                 <property name="valign">center</property>
-                <property name="model">choose_configuration_model</property>
               </object>
             </child>
           </object>

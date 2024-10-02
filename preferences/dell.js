@@ -67,6 +67,7 @@ export const Dell = GObject.registerClass({
     }
 
     _addBiosPasswordOption() {
+        this._bios_settings_group.visible = true;
         this._success_keyring_icon.visible = false;
         this._failed_keyring_icon.visible = false;
 

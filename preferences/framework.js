@@ -29,7 +29,7 @@ export const Framework = GObject.registerClass({
         const currentConfigMode = this._settings.get_string('configuration-mode');
         const initialSelectedIndex = supportedConfigs.indexOf(currentConfigMode);
         if (initialSelectedIndex !== -1)
-            this._choose_package.set_selected(initialSelectedIndex);
+            this._choose_configuration.set_selected(initialSelectedIndex);
 
         this._choose_configuration.connect('notify::selected-item', () => {
             const selectedIndex = this._choose_configuration.get_selected();
