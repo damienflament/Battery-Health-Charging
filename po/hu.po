@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Battery Health Charging\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-06-18 10:53-0700\n"
+"POT-Creation-Date: 2024-10-04 09:14-0700\n"
 "PO-Revision-Date: 2024-05-22 23:34+0200\n"
 "Last-Translator: ViBE <vibe@protonmail.com>\n"
 "Language-Team: Hungarian <vibe@protonmail.com>\n"
@@ -21,23 +21,23 @@ msgstr ""
 msgid "Battery Health Charging"
 msgstr "Töltési mód"
 
-#: lib/notifier.js:29
+#: lib/notifier.js:34
 msgid "Mode updated"
 msgstr "Töltési mód megváltozott"
 
-#: lib/notifier.js:34
+#: lib/notifier.js:39
 msgid "Battery Health Charging Error"
 msgstr "Töltési mód - hiba"
 
-#: lib/notifier.js:55 ui/general.ui:9
+#: lib/notifier.js:60 ui/general.ui:9
 msgid "Settings"
 msgstr "Beállítások"
 
-#: lib/notifier.js:59
+#: lib/notifier.js:64
 msgid "Show details"
 msgstr "Részletek megjelenítése"
 
-#: lib/notifier.js:76
+#: lib/notifier.js:81
 msgid ""
 "Unsupported device.\n"
 "This extension is not compatible with your device."
@@ -45,33 +45,46 @@ msgstr ""
 "Nem támogatott eszköz.\n"
 "Ez a kiterjesztés nem kompatibilis ezzel az eszközzel."
 
-#: lib/notifier.js:78
+#: lib/notifier.js:83
 msgid "Missing dependencies"
 msgstr "Megoldatlan függőségek vannak"
 
-#: lib/notifier.js:82
+#: lib/notifier.js:87
 msgid "Please install polkit from extension settings under Installation."
 msgstr "Kérem, hozzon létre szabályokat a kiterjesztés beállításaiban!"
 
-#: lib/notifier.js:86
+#: lib/notifier.js:91
 msgid "Please update polkit from extension settings under Installation."
 msgstr "Kérem, frissítse a szabályokat a kiterjesztés beállításaiban!"
 
-#: lib/notifier.js:90
+#: lib/notifier.js:95
+msgid "Install check failed."
+msgstr ""
+
+#: lib/notifier.js:99
+msgid "Install check timed out."
+msgstr ""
+
+#: lib/notifier.js:103
 #, javascript-format
 msgid "Encountered an unexpected error. (%s)"
 msgstr "Váratlan hiba történt. (%s)"
 
-#: lib/notifier.js:94
+#: lib/notifier.js:107
 #, javascript-format
 msgid "Charging threshold not updated. (%s)"
 msgstr "Töltési küszöbszint nem változott. (%s)"
 
-#: lib/notifier.js:98
+#: lib/notifier.js:111
+#, javascript-format
+msgid "Threshold update process timed out. (%s)"
+msgstr ""
+
+#: lib/notifier.js:115
 msgid "Apply correct Bios Password to set threshold."
 msgstr "BIOS/UEFI jelszó megadása szükséges a küszöbszint módosításához."
 
-#: lib/notifier.js:102
+#: lib/notifier.js:119
 #, javascript-format
 msgid ""
 "Battery 1\n"
@@ -79,12 +92,12 @@ msgid ""
 msgstr "1. akkumulátor töltési küszöbszintje beállítva %d / %d %%-ra"
 
 #. TRANSLATORS: Keep translation short if possible. Maximum  34 characters can be displayed here
-#: lib/notifier.js:107 lib/thresholdPanel.js:366
+#: lib/notifier.js:124 lib/thresholdPanel.js:336
 #, javascript-format
 msgid "Charge thresholds are set to %d / %d %%"
 msgstr "Töltési küszöbszint beállítva %d / %d %%-ra"
 
-#: lib/notifier.js:112
+#: lib/notifier.js:129
 #, javascript-format
 msgid ""
 "Battery 1\n"
@@ -92,165 +105,165 @@ msgid ""
 msgstr "1. akkumulátor töltési küszöbszintje beállítva %d%%-ra"
 
 #. TRANSLATORS: Keep translation short if possible. Maximum  34 characters can be displayed here
-#: lib/notifier.js:116 lib/thresholdPanel.js:370
+#: lib/notifier.js:133 lib/thresholdPanel.js:340
 #, javascript-format
 msgid "Charging Limit is set to %d%%"
 msgstr "Töltési küszöbszint beállítva %d%%-ra"
 
-#: lib/notifier.js:120
+#: lib/notifier.js:137
 #, javascript-format
 msgid ""
 "Battery 2\n"
 "Charge thresholds are set to %d / %d %%"
 msgstr "2. akkumulátor töltési küszöbszintje beállítva %d / %d %%-ra"
 
-#: lib/notifier.js:125
+#: lib/notifier.js:142
 #, javascript-format
 msgid ""
 "Battery 2\n"
 "Charging Limit is set to %d%%"
 msgstr "2. akkumulátor töltési küszöbszintje beállítva %d%%-ra"
 
-#: lib/notifier.js:130
+#: lib/notifier.js:147
 msgid "Charging Mode is set to Full Capacity"
 msgstr "Töltési mód beállítva teljes feltöltésre"
 
-#: lib/notifier.js:134
+#: lib/notifier.js:151
 msgid "Charging Mode is set to Balanced"
 msgstr "Töltési mód beállítva kiegyensúlyozottra"
 
-#: lib/notifier.js:138
+#: lib/notifier.js:155
 msgid "Charging Mode is set to Maximum Lifespan"
 msgstr "Töltési mód beállítva tárolásra"
 
-#: lib/notifier.js:142
+#: lib/notifier.js:159
 msgid "Charging Mode is set to Express"
 msgstr "Töltési mód beállítva Dell ExpressCharge™ töltésre"
 
-#: lib/notifier.js:146
+#: lib/notifier.js:163
 msgid "Charging Mode is set to Adaptive"
 msgstr "Töltési mód beállítva Dell Adaptív töltésre"
 
+#: lib/notifier.js:167
+msgid ""
+"Threshold not applied: Battery level above 75%. Please unplug the charger "
+"and discharge the battery below 75% to apply the 80% limit."
+msgstr ""
+
 #. TRANSLATORS: Keep translation short if possible. Maximum  10 characters can be displayed here
-#: lib/thresholdPanel.js:28
+#: lib/thresholdPanel.js:24
 msgid "Battery"
 msgstr "Akkumulátor"
 
 #. TRANSLATORS: Keep translation short if possible. Maximum  10 characters can be displayed here
-#: lib/thresholdPanel.js:30 preferences/thresholdPrimary.js:44
+#: lib/thresholdPanel.js:26 preferences/thresholdPrimary.js:44
 msgid "Battery 1"
 msgstr "1. akkumulátor"
 
 #. TRANSLATORS: Keep translation short if possible. Maximum  10 characters can be displayed here
-#: lib/thresholdPanel.js:32 ui/thresholdSecondary.ui:5
+#: lib/thresholdPanel.js:28 ui/thresholdSecondary.ui:5
 msgid "Battery 2"
 msgstr "2. akkumulátor"
 
 #. TRANSLATORS: Keep translation short if possible. Maximum  21 characters can be displayed here
-#: lib/thresholdPanel.js:36 lib/thresholdPanel.js:343
+#: lib/thresholdPanel.js:32 lib/thresholdPanel.js:316
 msgid "Battery Charging Mode"
 msgstr "Töltési mód"
 
 #. TRANSLATORS: Keep translation short if possible. Maximum  34 characters can be displayed here
-#: lib/thresholdPanel.js:69 preferences/thresholdPrimary.js:201
+#: lib/thresholdPanel.js:65 preferences/thresholdPrimary.js:201
 #: preferences/thresholdSecondary.js:196
 msgid "Full Capacity Mode"
 msgstr "Teljes feltöltés"
 
 #. TRANSLATORS: Keep translation short if possible. Maximum  34 characters can be displayed here
-#: lib/thresholdPanel.js:75 preferences/thresholdPrimary.js:205
+#: lib/thresholdPanel.js:71 preferences/thresholdPrimary.js:205
 #: preferences/thresholdSecondary.js:200
 msgid "Balanced Mode"
 msgstr "Kiegyensúlyozott"
 
 #. TRANSLATORS: Keep translation short if possible. Maximum  34 characters can be displayed here
-#: lib/thresholdPanel.js:81 preferences/thresholdPrimary.js:209
+#: lib/thresholdPanel.js:77 preferences/thresholdPrimary.js:209
 #: preferences/thresholdSecondary.js:204
 msgid "Maximum Lifespan Mode"
 msgstr "Tárolás"
 
 #. TRANSLATORS: Keep translation short if possible. Maximum  34 characters can be displayed here
-#: lib/thresholdPanel.js:86
+#: lib/thresholdPanel.js:82
 msgid "Adaptive Mode"
 msgstr "Adaptív"
 
 #. TRANSLATORS: Keep translation short if possible. Maximum  34 characters can be displayed here
-#: lib/thresholdPanel.js:91
+#: lib/thresholdPanel.js:87
 msgid "Express Mode"
 msgstr "ExpressCharge™"
 
 #. TRANSLATORS: Keep translation short if possible. Maximum  21 characters can be displayed here
-#: lib/thresholdPanel.js:347
+#: lib/thresholdPanel.js:320
 msgid "Battery Uninstalled"
 msgstr "Akkumulátor eltávolítva"
 
 #. TRANSLATORS: Keep translation short if possible. Maximum  34 characters can be displayed here
-#: lib/thresholdPanel.js:357
+#: lib/thresholdPanel.js:330
 msgid "No Battery detected!"
 msgstr "Nem található akkumulátor."
 
 #. TRANSLATORS: Keep translation short if possible. Maximum  34 characters can be displayed here
-#: lib/thresholdPanel.js:360
-#, javascript-format
-msgid "Discharge Battery below %d%%"
-msgstr "Akkumulátor merítése %d%% alá"
-
-#. TRANSLATORS: Keep translation short if possible. Maximum  34 characters can be displayed here
-#: lib/thresholdPanel.js:374
+#: lib/thresholdPanel.js:344
 msgid "Charging Mode: Full Capacity"
 msgstr "Töltési mód: Teljes feltöltés"
 
 #. TRANSLATORS: Keep translation short if possible. Maximum  34 characters can be displayed here
-#: lib/thresholdPanel.js:377
+#: lib/thresholdPanel.js:347
 msgid "Charging Mode: Balanced"
 msgstr "Töltési mód: Kiegyensúlyozott"
 
 #. TRANSLATORS: Keep translation short if possible. Maximum  34 characters can be displayed here
-#: lib/thresholdPanel.js:380
+#: lib/thresholdPanel.js:350
 msgid "Charging Mode: Maximum Lifespan"
 msgstr "Töltési mód: Tárolás"
 
 #. TRANSLATORS: Keep translation short if possible. Maximum  34 characters can be displayed here
-#: lib/thresholdPanel.js:383
+#: lib/thresholdPanel.js:353
 msgid "Charging Mode: Adaptive"
 msgstr "Töltési mód: Adaptív"
 
 #. TRANSLATORS: Keep translation short if possible. Maximum  34 characters can be displayed here
-#: lib/thresholdPanel.js:386
+#: lib/thresholdPanel.js:356
 msgid "Charging Mode: Express"
 msgstr "Töltési mód: ExpressCharge™"
 
 #. TRANSLATORS: Keep translation short if possible. Maximum  13 characters can be displayed here
-#: lib/thresholdPanel.js:428
+#: lib/thresholdPanel.js:398
 msgid "Uninstalled"
 msgstr "Eltávolítva"
 
 #. TRANSLATORS: Keep translation short if possible. Maximum  13 characters can be displayed here
-#: lib/thresholdPanel.js:431
+#: lib/thresholdPanel.js:401
 msgid "Full Capacity"
 msgstr "Teljes feltöltés"
 
 #. TRANSLATORS: Keep translation short if possible. Maximum  13 characters can be displayed here
-#: lib/thresholdPanel.js:434
+#: lib/thresholdPanel.js:404
 msgid "Balanced"
 msgstr "Kiegyensúlyozott"
 
 #. TRANSLATORS: Keep translation short if possible. Maximum  13 characters can be displayed here
-#: lib/thresholdPanel.js:437
+#: lib/thresholdPanel.js:407
 msgid "Max Lifespan"
 msgstr "Tárolás"
 
 #. TRANSLATORS: Keep translation short if possible. Maximum  13 characters can be displayed here
-#: lib/thresholdPanel.js:440
+#: lib/thresholdPanel.js:410
 msgid "Adaptive"
 msgstr "Adaptív"
 
 #. TRANSLATORS: Keep translation short if possible. Maximum  13 characters can be displayed here
-#: lib/thresholdPanel.js:443
+#: lib/thresholdPanel.js:413
 msgid "Express"
 msgstr "ExpressCharge™"
 
-#: lib/thresholdPanel.js:480
+#: lib/thresholdPanel.js:450
 msgid "Force Discharge"
 msgstr "Merítés kényszerítése"
 
@@ -275,6 +288,27 @@ msgid ""
 msgstr ""
 "Erre az alkalmazásra egyáltalán nem vonatkozik garancia. További részletek "
 "a(z) <a href=\"%s\">%s</a> szövegében."
+
+#: preferences/chromebook.js:20 preferences/dell.js:27
+#: preferences/framework.js:20
+msgid "Sysfs node"
+msgstr ""
+
+#: preferences/chromebook.js:21
+msgid "Ectool"
+msgstr ""
+
+#: preferences/dell.js:28
+msgid "Libsmbios"
+msgstr "Libsmbios"
+
+#: preferences/dell.js:29
+msgid "Dell Command Center"
+msgstr "Dell Command Center"
+
+#: preferences/framework.js:21
+msgid "Framework Tool"
+msgstr ""
 
 #: preferences/general.js:53
 msgid ""
@@ -302,15 +336,15 @@ msgstr "Telepítés"
 msgid "Update"
 msgstr "Frissítés"
 
-#: preferences/general.js:194
+#: preferences/general.js:198
 msgid "Installation Successful."
 msgstr "Szabályok létrehozva."
 
-#: preferences/general.js:197
+#: preferences/general.js:201
 msgid "Uninstallation Successful."
 msgstr "Szabályok eltávolítva."
 
-#: preferences/general.js:200
+#: preferences/general.js:204
 msgid "Encountered an unexpected error."
 msgstr "Váratlan hiba történt."
 
@@ -367,11 +401,13 @@ msgstr "Crowdin fordítás"
 msgid "Online Tutorials"
 msgstr "Segédlet"
 
-#: ui/apple.ui:5 ui/dell.ui:5 ui/thinkpad.ui:5
+#: ui/apple.ui:5 ui/chromebook.ui:5 ui/dell.ui:5 ui/framework.ui:5
+#: ui/thinkpad.ui:5
 msgid "Device"
 msgstr "Eszköz"
 
-#: ui/apple.ui:9 ui/dell.ui:9 ui/thinkpad.ui:9
+#: ui/apple.ui:9 ui/chromebook.ui:9 ui/dell.ui:9 ui/framework.ui:9
+#: ui/thinkpad.ui:9
 msgid "Device settings"
 msgstr "Vezérlés"
 
@@ -379,23 +415,23 @@ msgstr "Vezérlés"
 msgid "Change the behavior of charging indicator light"
 msgstr "Jelzőlámpa jelzéseinek felülbírálása"
 
-#: ui/dell.ui:12
-msgid "Dell package for charging mode"
-msgstr "Dell töltést szabályozó modul"
+#: ui/chromebook.ui:12 ui/dell.ui:12 ui/framework.ui:12
+msgid "Select configuration for charging mode"
+msgstr ""
 
-#: ui/dell.ui:13
-msgid "Select Dell package used for changing charging mode/threshold."
-msgstr "Dell laptopok töltését szabályozó modul kiválasztása."
+#: ui/chromebook.ui:13 ui/dell.ui:13 ui/framework.ui:13
+msgid "Select configuration used for changing charging mode/threshold."
+msgstr ""
 
-#: ui/dell.ui:27
+#: ui/dell.ui:26
 msgid "Bios Authentication"
 msgstr "BIOS/UEFI hozzáférés"
 
-#: ui/dell.ui:30
+#: ui/dell.ui:29
 msgid "Requires Bios password validation to change mode/threshold"
 msgstr "Felügyelet nélküli módosítás engedélyezése"
 
-#: ui/dell.ui:31
+#: ui/dell.ui:30
 msgid ""
 "Enable if Dell command configure uses Bios (system) password to change mode/"
 "threshold"
@@ -403,21 +439,13 @@ msgstr ""
 "Amennyiben a BIOS/UEFI jelszóval védett szükséges lehet annak megadása a "
 "töltés vezérlésének engedélyezéséhez"
 
-#: ui/dell.ui:43
+#: ui/dell.ui:42
 msgid "Enter Bios Password"
 msgstr "Jelszó megadása"
 
-#: ui/dell.ui:44
+#: ui/dell.ui:43
 msgid "Note: Bios password will be stored in Gnome Keyring"
 msgstr "Megjegyzés: A jelszót a Gnome kulcstartó fogja tárolni"
-
-#: ui/dell.ui:79
-msgid "Libsmbios"
-msgstr "Libsmbios"
-
-#: ui/dell.ui:80
-msgid "Dell Command Center"
-msgstr "Dell Command Center"
 
 #: ui/general.ui:5
 msgid "General"
@@ -545,9 +573,9 @@ msgstr ""
 
 #: ui/thinkpad.ui:25
 msgid ""
-"Certain ThinkPad models may read threshold values incorrectly, causing "
-"verification failures. Enabling this option will write new threshold values "
-"without verifying if they were applied correctly."
+"Due to firmware or kernel bugs, some laptops may report incorrect thresholds "
+"consistently or after restart, sleep, or hibernate. Enable this setting to "
+"force threshold updates if you encounter this issue."
 msgstr ""
 
 #: ui/thresholdPrimary.ui:21 ui/thresholdSecondary.ui:21
@@ -582,3 +610,13 @@ msgstr "Jelenlegi érték"
 #: ui/thresholdSecondary.ui:154 ui/thresholdSecondary.ui:223
 msgid "Start charging threshold value"
 msgstr "Töltés indítása"
+
+#, javascript-format
+#~ msgid "Discharge Battery below %d%%"
+#~ msgstr "Akkumulátor merítése %d%% alá"
+
+#~ msgid "Dell package for charging mode"
+#~ msgstr "Dell töltést szabályozó modul"
+
+#~ msgid "Select Dell package used for changing charging mode/threshold."
+#~ msgstr "Dell laptopok töltését szabályozó modul kiválasztása."

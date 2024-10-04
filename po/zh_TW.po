@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Battery Health Charging\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-06-18 10:53-0700\n"
+"POT-Creation-Date: 2024-10-04 09:14-0700\n"
 "PO-Revision-Date: 2024-09-24 17:19+0800\n"
 "Last-Translator: Peter Dave Hello <hsu@peterdavehello.org>\n"
 "Language-Team: Chinese (traditional)\n"
@@ -21,23 +21,23 @@ msgstr ""
 msgid "Battery Health Charging"
 msgstr "電池健康充電"
 
-#: lib/notifier.js:29
+#: lib/notifier.js:34
 msgid "Mode updated"
 msgstr "模式已更新"
 
-#: lib/notifier.js:34
+#: lib/notifier.js:39
 msgid "Battery Health Charging Error"
 msgstr "電池健康充電錯誤"
 
-#: lib/notifier.js:55 ui/general.ui:9
+#: lib/notifier.js:60 ui/general.ui:9
 msgid "Settings"
 msgstr "設定"
 
-#: lib/notifier.js:59
+#: lib/notifier.js:64
 msgid "Show details"
 msgstr "顯示詳細資訊"
 
-#: lib/notifier.js:76
+#: lib/notifier.js:81
 msgid ""
 "Unsupported device.\n"
 "This extension is not compatible with your device."
@@ -45,33 +45,46 @@ msgstr ""
 "不支援的裝置。\n"
 "此擴充功能與您的裝置不相容。"
 
-#: lib/notifier.js:78
+#: lib/notifier.js:83
 msgid "Missing dependencies"
 msgstr "缺少相依套件"
 
-#: lib/notifier.js:82
+#: lib/notifier.js:87
 msgid "Please install polkit from extension settings under Installation."
 msgstr "請從擴充功能設定中的「安裝」頁面安裝 polkit。"
 
-#: lib/notifier.js:86
+#: lib/notifier.js:91
 msgid "Please update polkit from extension settings under Installation."
 msgstr "請從擴充功能設定中的「安裝」頁面更新 polkit。"
 
-#: lib/notifier.js:90
+#: lib/notifier.js:95
+msgid "Install check failed."
+msgstr ""
+
+#: lib/notifier.js:99
+msgid "Install check timed out."
+msgstr ""
+
+#: lib/notifier.js:103
 #, javascript-format
 msgid "Encountered an unexpected error. (%s)"
 msgstr "遇到未預期的錯誤。(%s)"
 
-#: lib/notifier.js:94
+#: lib/notifier.js:107
 #, javascript-format
 msgid "Charging threshold not updated. (%s)"
 msgstr "充電閾值未更新。(%s)"
 
-#: lib/notifier.js:98
+#: lib/notifier.js:111
+#, javascript-format
+msgid "Threshold update process timed out. (%s)"
+msgstr ""
+
+#: lib/notifier.js:115
 msgid "Apply correct Bios Password to set threshold."
 msgstr "請輸入正確的 BIOS 密碼以設定閾值。"
 
-#: lib/notifier.js:102
+#: lib/notifier.js:119
 #, javascript-format
 msgid ""
 "Battery 1\n"
@@ -81,12 +94,12 @@ msgstr ""
 "充電閾值設定為 %d / %d %%"
 
 #. TRANSLATORS: Keep translation short if possible. Maximum  34 characters can be displayed here
-#: lib/notifier.js:107 lib/thresholdPanel.js:366
+#: lib/notifier.js:124 lib/thresholdPanel.js:336
 #, javascript-format
 msgid "Charge thresholds are set to %d / %d %%"
 msgstr "充電閾值已設為 %d / %d %%"
 
-#: lib/notifier.js:112
+#: lib/notifier.js:129
 #, javascript-format
 msgid ""
 "Battery 1\n"
@@ -96,12 +109,12 @@ msgstr ""
 "充電限制設定為 %d%%"
 
 #. TRANSLATORS: Keep translation short if possible. Maximum  34 characters can be displayed here
-#: lib/notifier.js:116 lib/thresholdPanel.js:370
+#: lib/notifier.js:133 lib/thresholdPanel.js:340
 #, javascript-format
 msgid "Charging Limit is set to %d%%"
 msgstr "充電限制已設為 %d%%"
 
-#: lib/notifier.js:120
+#: lib/notifier.js:137
 #, javascript-format
 msgid ""
 "Battery 2\n"
@@ -110,7 +123,7 @@ msgstr ""
 "電池 2\n"
 "充電閾值設定為 %d / %d %%"
 
-#: lib/notifier.js:125
+#: lib/notifier.js:142
 #, javascript-format
 msgid ""
 "Battery 2\n"
@@ -119,146 +132,146 @@ msgstr ""
 "電池 2\n"
 "充電限制設定為 %d%%"
 
-#: lib/notifier.js:130
+#: lib/notifier.js:147
 msgid "Charging Mode is set to Full Capacity"
 msgstr "充電模式設定為完全充滿"
 
-#: lib/notifier.js:134
+#: lib/notifier.js:151
 msgid "Charging Mode is set to Balanced"
 msgstr "充電模式設定為平衡"
 
-#: lib/notifier.js:138
+#: lib/notifier.js:155
 msgid "Charging Mode is set to Maximum Lifespan"
 msgstr "充電模式設定為最佳壽命"
 
-#: lib/notifier.js:142
+#: lib/notifier.js:159
 msgid "Charging Mode is set to Express"
 msgstr "充電模式設定為快速充電"
 
-#: lib/notifier.js:146
+#: lib/notifier.js:163
 msgid "Charging Mode is set to Adaptive"
 msgstr "充電模式設定為動態調整"
 
+#: lib/notifier.js:167
+msgid ""
+"Threshold not applied: Battery level above 75%. Please unplug the charger "
+"and discharge the battery below 75% to apply the 80% limit."
+msgstr ""
+
 #. TRANSLATORS: Keep translation short if possible. Maximum  10 characters can be displayed here
-#: lib/thresholdPanel.js:28
+#: lib/thresholdPanel.js:24
 msgid "Battery"
 msgstr "電池"
 
 #. TRANSLATORS: Keep translation short if possible. Maximum  10 characters can be displayed here
-#: lib/thresholdPanel.js:30 preferences/thresholdPrimary.js:44
+#: lib/thresholdPanel.js:26 preferences/thresholdPrimary.js:44
 msgid "Battery 1"
 msgstr "電池 1"
 
 #. TRANSLATORS: Keep translation short if possible. Maximum  10 characters can be displayed here
-#: lib/thresholdPanel.js:32 ui/thresholdSecondary.ui:5
+#: lib/thresholdPanel.js:28 ui/thresholdSecondary.ui:5
 msgid "Battery 2"
 msgstr "電池 2"
 
 #. TRANSLATORS: Keep translation short if possible. Maximum  21 characters can be displayed here
-#: lib/thresholdPanel.js:36 lib/thresholdPanel.js:343
+#: lib/thresholdPanel.js:32 lib/thresholdPanel.js:316
 msgid "Battery Charging Mode"
 msgstr "電池充電模式"
 
 #. TRANSLATORS: Keep translation short if possible. Maximum  34 characters can be displayed here
-#: lib/thresholdPanel.js:69 preferences/thresholdPrimary.js:201
+#: lib/thresholdPanel.js:65 preferences/thresholdPrimary.js:201
 #: preferences/thresholdSecondary.js:196
 msgid "Full Capacity Mode"
 msgstr "完全充滿模式"
 
 #. TRANSLATORS: Keep translation short if possible. Maximum  34 characters can be displayed here
-#: lib/thresholdPanel.js:75 preferences/thresholdPrimary.js:205
+#: lib/thresholdPanel.js:71 preferences/thresholdPrimary.js:205
 #: preferences/thresholdSecondary.js:200
 msgid "Balanced Mode"
 msgstr "平衡模式"
 
 #. TRANSLATORS: Keep translation short if possible. Maximum  34 characters can be displayed here
-#: lib/thresholdPanel.js:81 preferences/thresholdPrimary.js:209
+#: lib/thresholdPanel.js:77 preferences/thresholdPrimary.js:209
 #: preferences/thresholdSecondary.js:204
 msgid "Maximum Lifespan Mode"
 msgstr "最佳壽命模式"
 
 #. TRANSLATORS: Keep translation short if possible. Maximum  34 characters can be displayed here
-#: lib/thresholdPanel.js:86
+#: lib/thresholdPanel.js:82
 msgid "Adaptive Mode"
 msgstr "動態調整模式"
 
 #. TRANSLATORS: Keep translation short if possible. Maximum  34 characters can be displayed here
-#: lib/thresholdPanel.js:91
+#: lib/thresholdPanel.js:87
 msgid "Express Mode"
 msgstr "快速充電模式"
 
 #. TRANSLATORS: Keep translation short if possible. Maximum  21 characters can be displayed here
-#: lib/thresholdPanel.js:347
+#: lib/thresholdPanel.js:320
 msgid "Battery Uninstalled"
 msgstr "電池未安裝"
 
 #. TRANSLATORS: Keep translation short if possible. Maximum  34 characters can be displayed here
-#: lib/thresholdPanel.js:357
+#: lib/thresholdPanel.js:330
 msgid "No Battery detected!"
 msgstr "未偵測到電池！"
 
 #. TRANSLATORS: Keep translation short if possible. Maximum  34 characters can be displayed here
-#: lib/thresholdPanel.js:360
-#, javascript-format
-msgid "Discharge Battery below %d%%"
-msgstr "將電池放電至 %d%% 以下"
-
-#. TRANSLATORS: Keep translation short if possible. Maximum  34 characters can be displayed here
-#: lib/thresholdPanel.js:374
+#: lib/thresholdPanel.js:344
 msgid "Charging Mode: Full Capacity"
 msgstr "充電模式：完全充滿"
 
 #. TRANSLATORS: Keep translation short if possible. Maximum  34 characters can be displayed here
-#: lib/thresholdPanel.js:377
+#: lib/thresholdPanel.js:347
 msgid "Charging Mode: Balanced"
 msgstr "充電模式：平衡"
 
 #. TRANSLATORS: Keep translation short if possible. Maximum  34 characters can be displayed here
-#: lib/thresholdPanel.js:380
+#: lib/thresholdPanel.js:350
 msgid "Charging Mode: Maximum Lifespan"
 msgstr "充電模式：最佳壽命"
 
 #. TRANSLATORS: Keep translation short if possible. Maximum  34 characters can be displayed here
-#: lib/thresholdPanel.js:383
+#: lib/thresholdPanel.js:353
 msgid "Charging Mode: Adaptive"
 msgstr "充電模式：動態調整"
 
 #. TRANSLATORS: Keep translation short if possible. Maximum  34 characters can be displayed here
-#: lib/thresholdPanel.js:386
+#: lib/thresholdPanel.js:356
 msgid "Charging Mode: Express"
 msgstr "充電模式：快速充電"
 
 #. TRANSLATORS: Keep translation short if possible. Maximum  13 characters can be displayed here
-#: lib/thresholdPanel.js:428
+#: lib/thresholdPanel.js:398
 msgid "Uninstalled"
 msgstr "未安裝"
 
 #. TRANSLATORS: Keep translation short if possible. Maximum  13 characters can be displayed here
-#: lib/thresholdPanel.js:431
+#: lib/thresholdPanel.js:401
 msgid "Full Capacity"
 msgstr "完全充滿"
 
 #. TRANSLATORS: Keep translation short if possible. Maximum  13 characters can be displayed here
-#: lib/thresholdPanel.js:434
+#: lib/thresholdPanel.js:404
 msgid "Balanced"
 msgstr "平衡"
 
 #. TRANSLATORS: Keep translation short if possible. Maximum  13 characters can be displayed here
-#: lib/thresholdPanel.js:437
+#: lib/thresholdPanel.js:407
 msgid "Max Lifespan"
 msgstr "最佳壽命"
 
 #. TRANSLATORS: Keep translation short if possible. Maximum  13 characters can be displayed here
-#: lib/thresholdPanel.js:440
+#: lib/thresholdPanel.js:410
 msgid "Adaptive"
 msgstr "動態調整"
 
 #. TRANSLATORS: Keep translation short if possible. Maximum  13 characters can be displayed here
-#: lib/thresholdPanel.js:443
+#: lib/thresholdPanel.js:413
 msgid "Express"
 msgstr "快速充電"
 
-#: lib/thresholdPanel.js:480
+#: lib/thresholdPanel.js:450
 msgid "Force Discharge"
 msgstr "強制放電"
 
@@ -278,10 +291,30 @@ msgstr "© %s %s"
 #: preferences/about.js:48
 #, javascript-format
 msgid ""
-"This application comes with absolutely no warranty. See the <a href=\"%s\">"
-"%s</a> for details."
+"This application comes with absolutely no warranty. See the <a "
+"href=\"%s\">%s</a> for details."
+msgstr "本應用程式不提供任何保固。詳情請參閱 <a href=\"%s\">%s</a>。"
+
+#: preferences/chromebook.js:20 preferences/dell.js:27
+#: preferences/framework.js:20
+msgid "Sysfs node"
 msgstr ""
-"本應用程式不提供任何保固。詳情請參閱 <a href=\"%s\">%s</a>。"
+
+#: preferences/chromebook.js:21
+msgid "Ectool"
+msgstr ""
+
+#: preferences/dell.js:28
+msgid "Libsmbios"
+msgstr "Libsmbios"
+
+#: preferences/dell.js:29
+msgid "Dell Command Center"
+msgstr "Dell Command Center"
+
+#: preferences/framework.js:21
+msgid "Framework Tool"
+msgstr ""
 
 #: preferences/general.js:53
 msgid ""
@@ -290,7 +323,8 @@ msgid ""
 "switch to <b>Symbols Only</b> and this option will be disabled."
 msgstr ""
 "選擇指示器和選單的圖示類型。\n"
-"在閾值設定中，如果選擇了<b>自訂</b>模式，圖示類型將切換為<b>只有符號</b>，且此選項將被停用。"
+"在閾值設定中，如果選擇了<b>自訂</b>模式，圖示類型將切換為<b>只有符號</b>，且"
+"此選項將被停用。"
 
 #: preferences/general.js:55
 msgid "Select the type of icon for indicator and menu."
@@ -308,15 +342,15 @@ msgstr "安裝"
 msgid "Update"
 msgstr "更新"
 
-#: preferences/general.js:194
+#: preferences/general.js:198
 msgid "Installation Successful."
 msgstr "安裝成功。"
 
-#: preferences/general.js:197
+#: preferences/general.js:201
 msgid "Uninstallation Successful."
 msgstr "解除安裝成功。"
 
-#: preferences/general.js:200
+#: preferences/general.js:204
 msgid "Encountered an unexpected error."
 msgstr "遇到未預期的錯誤。"
 
@@ -373,11 +407,13 @@ msgstr "Crowdin"
 msgid "Online Tutorials"
 msgstr "線上教學"
 
-#: ui/apple.ui:5 ui/dell.ui:5 ui/thinkpad.ui:5
+#: ui/apple.ui:5 ui/chromebook.ui:5 ui/dell.ui:5 ui/framework.ui:5
+#: ui/thinkpad.ui:5
 msgid "Device"
 msgstr "裝置"
 
-#: ui/apple.ui:9 ui/dell.ui:9 ui/thinkpad.ui:9
+#: ui/apple.ui:9 ui/chromebook.ui:9 ui/dell.ui:9 ui/framework.ui:9
+#: ui/thinkpad.ui:9
 msgid "Device settings"
 msgstr "裝置設定"
 
@@ -385,44 +421,37 @@ msgstr "裝置設定"
 msgid "Change the behavior of charging indicator light"
 msgstr "變更充電指示燈的行為"
 
-#: ui/dell.ui:12
-msgid "Dell package for charging mode"
-msgstr "Dell 充電模式套件"
+#: ui/chromebook.ui:12 ui/dell.ui:12 ui/framework.ui:12
+msgid "Select configuration for charging mode"
+msgstr ""
 
-#: ui/dell.ui:13
-msgid "Select Dell package used for changing charging mode/threshold."
-msgstr "選擇用於變更充電模式／閾值的 Dell 套件。"
+#: ui/chromebook.ui:13 ui/dell.ui:13 ui/framework.ui:13
+msgid "Select configuration used for changing charging mode/threshold."
+msgstr ""
 
-#: ui/dell.ui:27
+#: ui/dell.ui:26
 msgid "Bios Authentication"
 msgstr "BIOS 驗證"
 
-#: ui/dell.ui:30
+#: ui/dell.ui:29
 msgid "Requires Bios password validation to change mode/threshold"
 msgstr "需要 BIOS 密碼驗證才能變更模式／閾值"
 
-#: ui/dell.ui:31
+#: ui/dell.ui:30
 msgid ""
 "Enable if Dell command configure uses Bios (system) password to change mode/"
 "threshold"
 msgstr ""
-"如果 Dell Command Configure 使用 BIOS（系統）密碼來變更模式／閾值，請啟用此選項"
+"如果 Dell Command Configure 使用 BIOS（系統）密碼來變更模式／閾值，請啟用此選"
+"項"
 
-#: ui/dell.ui:43
+#: ui/dell.ui:42
 msgid "Enter Bios Password"
 msgstr "輸入 BIOS 密碼"
 
-#: ui/dell.ui:44
+#: ui/dell.ui:43
 msgid "Note: Bios password will be stored in Gnome Keyring"
 msgstr "注意：BIOS 密碼將儲存在 GNOME 金鑰圈中"
-
-#: ui/dell.ui:79
-msgid "Libsmbios"
-msgstr "Libsmbios"
-
-#: ui/dell.ui:80
-msgid "Dell Command Center"
-msgstr "Dell Command Center"
 
 #: ui/general.ui:5
 msgid "General"
@@ -456,8 +485,7 @@ msgstr "在快速選單按鈕上顯示目前模式的子標題"
 msgid ""
 "Displays the current mode in the text form (subtitle) on the quick menu "
 "button."
-msgstr ""
-"在快速選單按鈕上以文字形式（子標題）顯示目前的模式。"
+msgstr "在快速選單按鈕上以文字形式（子標題）顯示目前的模式。"
 
 #: ui/general.ui:60
 msgid "Show system indicator"
@@ -485,8 +513,8 @@ msgid ""
 "quick settings panel when device is plugged into power source, even when "
 "charging is disabled due to charge threshold."
 msgstr ""
-"當裝置接上電源時，將工具列和快速設定面板中的電池指示器圖示切換為<b>充電中</b>，"
-"即使因為充電閾值而停用充電功能。"
+"當裝置接上電源時，將工具列和快速設定面板中的電池指示器圖示切換為<b>充電中</"
+"b>，即使因為充電閾值而停用充電功能。"
 
 #: ui/general.ui:103
 msgid "Installation"
@@ -512,7 +540,8 @@ msgid ""
 "extension.\n"
 "<b>Remove</b> this polkit policy script before uninstalling this extension."
 msgstr ""
-"此裝置需要 root 權限才能變更充電限制。設定一個具有權限的指令碼，並透過 polkit 授予使用者存取權。\n"
+"此裝置需要 root 權限才能變更充電限制。設定一個具有權限的指令碼，並透過 "
+"polkit 授予使用者存取權。\n"
 "\n"
 "<b>需要 root 權限</b>才能安裝、更新或移除 polkit 原則。\n"
 "\n"
@@ -539,8 +568,7 @@ msgstr "啟用強制放電電池功能（實驗性）"
 msgid ""
 "Enable option to force discharge battery when battery level higher than "
 "current threshold"
-msgstr ""
-"啟用在電池電量高於目前閾值時強制放電電池的選項"
+msgstr "啟用在電池電量高於目前閾值時強制放電電池的選項"
 
 #: ui/thinkpad.ui:24
 msgid "Skip Threshold Verification"
@@ -548,12 +576,10 @@ msgstr "跳過閾值驗證"
 
 #: ui/thinkpad.ui:25
 msgid ""
-"Certain ThinkPad models may read threshold values incorrectly, causing "
-"verification failures. Enabling this option will write new threshold values "
-"without verifying if they were applied correctly."
+"Due to firmware or kernel bugs, some laptops may report incorrect thresholds "
+"consistently or after restart, sleep, or hibernate. Enable this setting to "
+"force threshold updates if you encounter this issue."
 msgstr ""
-"某些 ThinkPad 型號可能會讀取錯誤的閾值，導致驗證失敗。啟用此選項將會寫入新的閾值，"
-"而不驗證它們是否已正確套用。"
 
 #: ui/thresholdPrimary.ui:21 ui/thresholdSecondary.ui:21
 msgid "Customize"
@@ -587,3 +613,21 @@ msgstr "目前數值"
 #: ui/thresholdSecondary.ui:154 ui/thresholdSecondary.ui:223
 msgid "Start charging threshold value"
 msgstr "開始充電閾值"
+
+#, javascript-format
+#~ msgid "Discharge Battery below %d%%"
+#~ msgstr "將電池放電至 %d%% 以下"
+
+#~ msgid "Dell package for charging mode"
+#~ msgstr "Dell 充電模式套件"
+
+#~ msgid "Select Dell package used for changing charging mode/threshold."
+#~ msgstr "選擇用於變更充電模式／閾值的 Dell 套件。"
+
+#~ msgid ""
+#~ "Certain ThinkPad models may read threshold values incorrectly, causing "
+#~ "verification failures. Enabling this option will write new threshold "
+#~ "values without verifying if they were applied correctly."
+#~ msgstr ""
+#~ "某些 ThinkPad 型號可能會讀取錯誤的閾值，導致驗證失敗。啟用此選項將會寫入新"
+#~ "的閾值，而不驗證它們是否已正確套用。"
