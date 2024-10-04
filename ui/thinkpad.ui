@@ -22,7 +22,7 @@
         <child>
           <object class="AdwActionRow">
             <property name="title" translatable="yes">Skip Threshold Verification</property>
-            <property name="subtitle" translatable="yes">Certain ThinkPad models may read threshold values incorrectly, causing verification failures. Enabling this option will write new threshold values without verifying if they were applied correctly.</property>
+            <property name="subtitle" translatable="yes">Due to firmware or kernel bugs, some laptops may report incorrect thresholds consistently or after restart, sleep, or hibernate. Enable this setting to force threshold updates if you encounter this issue.</property>
             <property name="activatable-widget">skip_threshold_verification</property>
             <child>
               <object class="GtkSwitch" id="skip_threshold_verification">
