@@ -54,6 +54,10 @@ export const AsusSingleBatteryBAT0 = GObject.registerClass({
 
     async setThresholdLimit(chargingMode) {
         this._endValue = this._settings.get_int(`current-${chargingMode}-end-threshold`);
+        this._skipVerification = this._settings.get_boolean('skip-threshold-verification');
+
+        if (!this._skipVerification && this._verifyThreshold())
+            return exitCode.SUCCESS;
 
         const [status] = await runCommandCtl(this.ctlPath, 'BAT0_END', `${this._endValue}`);
         if (status === exitCode.ERROR) {
@@ -62,6 +66,12 @@ export const AsusSingleBatteryBAT0 = GObject.registerClass({
         } else if (status === exitCode.TIMEOUT) {
             this.emit('threshold-applied', 'timeout');
             return exitCode.ERROR;
+        }
+
+        if (this._skipVerification) {
+            this.endLimitValue = this._endValue;
+            this.emit('threshold-applied', 'success');
+            return exitCode.SUCCESS;
         }
 
         if (this._verifyThreshold())
@@ -144,6 +154,10 @@ export const AsusSingleBatteryBAT1 = GObject.registerClass({
 
     async setThresholdLimit(chargingMode) {
         this._endValue = this._settings.get_int(`current-${chargingMode}-end-threshold`);
+        this._skipVerification = this._settings.get_boolean('skip-threshold-verification');
+
+        if (!this._skipVerification && this._verifyThreshold())
+            return exitCode.SUCCESS;
 
         const [status] = await runCommandCtl(this.ctlPath, 'BAT1_END', `${this._endValue}`);
         if (status === exitCode.ERROR) {
@@ -152,6 +166,12 @@ export const AsusSingleBatteryBAT1 = GObject.registerClass({
         } else if (status === exitCode.TIMEOUT) {
             this.emit('threshold-applied', 'timeout');
             return exitCode.ERROR;
+        }
+
+        if (this._skipVerification) {
+            this.endLimitValue = this._endValue;
+            this.emit('threshold-applied', 'success');
+            return exitCode.SUCCESS;
         }
 
         if (this._verifyThreshold())
@@ -234,6 +254,10 @@ export const AsusSingleBatteryBATC = GObject.registerClass({
 
     async setThresholdLimit(chargingMode) {
         this._endValue = this._settings.get_int(`current-${chargingMode}-end-threshold`);
+        this._skipVerification = this._settings.get_boolean('skip-threshold-verification');
+
+        if (!this._skipVerification && this._verifyThreshold())
+            return exitCode.SUCCESS;
 
         const [status] = await runCommandCtl(this.ctlPath, 'BATC_END', `${this._endValue}`);
         if (status === exitCode.ERROR) {
@@ -242,6 +266,12 @@ export const AsusSingleBatteryBATC = GObject.registerClass({
         } else if (status === exitCode.TIMEOUT) {
             this.emit('threshold-applied', 'timeout');
             return exitCode.ERROR;
+        }
+
+        if (this._skipVerification) {
+            this.endLimitValue = this._endValue;
+            this.emit('threshold-applied', 'success');
+            return exitCode.SUCCESS;
         }
 
         if (this._verifyThreshold())
@@ -324,6 +354,10 @@ export const AsusSingleBatteryBATT = GObject.registerClass({
 
     async setThresholdLimit(chargingMode) {
         this._endValue = this._settings.get_int(`current-${chargingMode}-end-threshold`);
+        this._skipVerification = this._settings.get_boolean('skip-threshold-verification');
+
+        if (!this._skipVerification && this._verifyThreshold())
+            return exitCode.SUCCESS;
 
         const [status] = await runCommandCtl(this.ctlPath, 'BATT_END', `${this._endValue}`);
         if (status === exitCode.ERROR) {
@@ -332,6 +366,12 @@ export const AsusSingleBatteryBATT = GObject.registerClass({
         } else if (status === exitCode.TIMEOUT) {
             this.emit('threshold-applied', 'timeout');
             return exitCode.ERROR;
+        }
+
+        if (this._skipVerification) {
+            this.endLimitValue = this._endValue;
+            this.emit('threshold-applied', 'success');
+            return exitCode.SUCCESS;
         }
 
         if (this._verifyThreshold())
