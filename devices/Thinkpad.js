@@ -77,8 +77,12 @@ export const ThinkpadDualBattery = GObject.registerClass({
             this.battery0Removed = false;
             this.battery1Removed = false;
         } else if (deviceType === this.type) {
-            this.battery0Removed = !fileExists(BAT0_END_PATH);
-            this.battery1Removed = !fileExists(BAT1_END_PATH);
+            const bat0EndPathExist = fileExists(BAT0_END_PATH);
+            const bat1EndPathExist = fileExists(BAT1_END_PATH);
+            if (!bat0EndPathExist && !bat1EndPathExist)
+                return false;
+            this.battery0Removed = !bat0EndPathExist;
+            this.battery1Removed = !bat1EndPathExist;
         }
         this._initializeBatteryMonitoring();
         return true;
