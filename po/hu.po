@@ -8,14 +8,15 @@ msgstr ""
 "Project-Id-Version: Battery Health Charging\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2024-10-04 09:14-0700\n"
-"PO-Revision-Date: 2024-05-22 23:34+0200\n"
+"PO-Revision-Date: 2024-10-05 02:35+0200\n"
 "Last-Translator: ViBE <vibe@protonmail.com>\n"
 "Language-Team: Hungarian <vibe@protonmail.com>\n"
 "Language: hu\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=2; plural=(n != 1)\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Gtranslator 46.0\n"
 
 #: lib/notifier.js:19
 msgid "Battery Health Charging"
@@ -59,11 +60,11 @@ msgstr "Kérem, frissítse a szabályokat a kiterjesztés beállításaiban!"
 
 #: lib/notifier.js:95
 msgid "Install check failed."
-msgstr ""
+msgstr "A szabályok létrehozásának ellenőrzése sikertelen."
 
 #: lib/notifier.js:99
 msgid "Install check timed out."
-msgstr ""
+msgstr "A szabályok létrehozása időtúllépés miatt meghiúsult."
 
 #: lib/notifier.js:103
 #, javascript-format
@@ -78,7 +79,7 @@ msgstr "Töltési küszöbszint nem változott. (%s)"
 #: lib/notifier.js:111
 #, javascript-format
 msgid "Threshold update process timed out. (%s)"
-msgstr ""
+msgstr "Töltési küszöbszint beállítása időtúllépés miatt meghiúsult. (%s)"
 
 #: lib/notifier.js:115
 msgid "Apply correct Bios Password to set threshold."
@@ -149,6 +150,9 @@ msgid ""
 "Threshold not applied: Battery level above 75%. Please unplug the charger "
 "and discharge the battery below 75% to apply the 80% limit."
 msgstr ""
+"Küszöbszint nem alkalmazható: A töltöttség jelenleg 75% feletti. Kérem, "
+"húzza ki a töltőt és merítse az akkumulátort 75% alá a 80%-os szint "
+"alkalmazásához!"
 
 #. TRANSLATORS: Keep translation short if possible. Maximum  10 characters can be displayed here
 #: lib/thresholdPanel.js:24
@@ -292,11 +296,11 @@ msgstr ""
 #: preferences/chromebook.js:20 preferences/dell.js:27
 #: preferences/framework.js:20
 msgid "Sysfs node"
-msgstr ""
+msgstr "Sysfs"
 
 #: preferences/chromebook.js:21
 msgid "Ectool"
-msgstr ""
+msgstr "Ectool"
 
 #: preferences/dell.js:28
 msgid "Libsmbios"
@@ -308,7 +312,7 @@ msgstr "Dell Command Center"
 
 #: preferences/framework.js:21
 msgid "Framework Tool"
-msgstr ""
+msgstr "Framework Tool"
 
 #: preferences/general.js:53
 msgid ""
@@ -417,11 +421,11 @@ msgstr "Jelzőlámpa jelzéseinek felülbírálása"
 
 #: ui/chromebook.ui:12 ui/dell.ui:12 ui/framework.ui:12
 msgid "Select configuration for charging mode"
-msgstr ""
+msgstr "Töltést szabályozó modul/módszer"
 
 #: ui/chromebook.ui:13 ui/dell.ui:13 ui/framework.ui:13
 msgid "Select configuration used for changing charging mode/threshold."
-msgstr ""
+msgstr "Meghatározható, hogy milyen módon történjen a küszöbszint beállítása."
 
 #: ui/dell.ui:26
 msgid "Bios Authentication"
@@ -483,7 +487,7 @@ msgstr "Töltési mód nevének megjelenítése a panelen."
 
 #: ui/general.ui:60
 msgid "Show system indicator"
-msgstr "Értesítési ikon"
+msgstr "Állapotjelző ikon"
 
 #: ui/general.ui:61
 msgid "Shows an icon in system tray."
@@ -569,7 +573,7 @@ msgstr ""
 
 #: ui/thinkpad.ui:24
 msgid "Skip Threshold Verification"
-msgstr ""
+msgstr "Küszöbszint felülírásának kényszerítése"
 
 #: ui/thinkpad.ui:25
 msgid ""
@@ -577,6 +581,10 @@ msgid ""
 "consistently or after restart, sleep, or hibernate. Enable this setting to "
 "force threshold updates if you encounter this issue."
 msgstr ""
+"Egyes eszközök egy firmware és/vagy kernel hiba következtében a beállítottól "
+"eltérő hibás küszöbértékeket jelezhetnek a rendszernek újraindítást/"
+"felfüggesztést/hibernálást követően. Ha ezt a hibát tapasztalja javasolt ezen "
+"beállítás bekapcsolása."
 
 #: ui/thresholdPrimary.ui:21 ui/thresholdSecondary.ui:21
 msgid "Customize"
@@ -610,13 +618,3 @@ msgstr "Jelenlegi érték"
 #: ui/thresholdSecondary.ui:154 ui/thresholdSecondary.ui:223
 msgid "Start charging threshold value"
 msgstr "Töltés indítása"
-
-#, javascript-format
-#~ msgid "Discharge Battery below %d%%"
-#~ msgstr "Akkumulátor merítése %d%% alá"
-
-#~ msgid "Dell package for charging mode"
-#~ msgstr "Dell töltést szabályozó modul"
-
-#~ msgid "Select Dell package used for changing charging mode/threshold."
-#~ msgstr "Dell laptopok töltését szabályozó modul kiválasztása."
