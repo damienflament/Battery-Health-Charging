@@ -3,6 +3,7 @@
 import GLib from 'gi://GLib';
 import GObject from 'gi://GObject';
 import * as Helper from '../lib/helper.js';
+
 const {dmiVendor, exitCode, execCheck} = Helper;
 
 export const  RazerSingleBattery = GObject.registerClass({

@@ -20,7 +20,6 @@ const BAT1_CHARGETYPES_PATH = '/sys/class/power_supply/BAT1/charge_types';
 const BAT1_END_PATH = '/sys/class/power_supply/BAT1/charge_control_end_threshold';
 const BAT1_START_PATH = '/sys/class/power_supply/BAT1/charge_control_start_threshold';
 
-
 export const DellSmBiosSingleBattery = GObject.registerClass({
     Signals: {'threshold-applied': {param_types: [GObject.TYPE_STRING]}},
 }, class DellSmBiosSingleBattery extends GObject.Object {
