@@ -264,14 +264,15 @@ export const ThinkpadSingleBatteryBAT0 = GObject.registerClass({
     }
 
     async setThresholdLimit(chargingMode) {
+        this._chargingMode = chargingMode;
         this._endValue = this._settings.get_int(`current-${chargingMode}-end-threshold`);
         this._startValue = this._settings.get_int(`current-${chargingMode}-start-threshold`);
         this._skipVerification = this._settings.get_boolean('skip-threshold-verification');
 
         if (!this._batteryMonitoringInitialized)
-            this._initializeBatteryMonitoring();
+            await this._initializeBatteryMonitoring();
         else if (this._settings.get_boolean('force-discharge-enabled'))
-            this._forceDischarge();
+            await this._forceDischarge();
 
         if (!this._skipVerification && this._verifyThreshold())
             return exitCode.SUCCESS;
@@ -335,30 +336,29 @@ export const ThinkpadSingleBatteryBAT0 = GObject.registerClass({
         );
     }
 
-    _enableForceDischarge() {
+    async _enableForceDischarge() {
         const forceDischargeModeRead = this._readForceDischargeMode();
         if (forceDischargeModeRead !== 'force-discharge')
-            runCommandCtl(this.ctlPath, 'FORCE_DISCHARGE_BAT0', 'force-discharge');
+            await runCommandCtl(this.ctlPath, 'FORCE_DISCHARGE_BAT0', 'force-discharge');
     }
 
-    _disableForceDischarge() {
+    async _disableForceDischarge() {
         const forceDischargeModeRead = this._readForceDischargeMode();
         if (forceDischargeModeRead !== 'auto')
-            runCommandCtl(this.ctlPath, 'FORCE_DISCHARGE_BAT0', 'auto');
+            await runCommandCtl(this.ctlPath, 'FORCE_DISCHARGE_BAT0', 'auto');
     }
 
-    _forceDischarge() {
-        const chargingMode = this._settings.get_string('charging-mode');
-        const currentThresholdValue = this._settings.get_int(`current-${chargingMode}-end-threshold`);
+    async _forceDischarge() {
+        const currentThresholdValue = this._settings.get_int(`current-${this._chargingMode}-end-threshold`);
         if (this._batteryLevel > currentThresholdValue)
-            this._enableForceDischarge();
+            await this._enableForceDischarge();
         else
-            this._disableForceDischarge();
+            await this._disableForceDischarge();
     }
 
-    _initializeBatteryMonitoring() {
+    async _initializeBatteryMonitoring() {
         if (this._settings.get_boolean('force-discharge-enabled'))
-            this._enableBatteryCapacityMonitoring();
+            await this._enableBatteryCapacityMonitoring();
         this._settings.connectObject(
             'changed::force-discharge-enabled', () => {
                 if (this._settings.get_boolean('force-discharge-enabled'))
@@ -371,9 +371,9 @@ export const ThinkpadSingleBatteryBAT0 = GObject.registerClass({
         this._batteryMonitoringInitialized = true;
     }
 
-    _enableBatteryCapacityMonitoring() {
+    async _enableBatteryCapacityMonitoring() {
         this._batteryLevel = readFileInt(BAT0_CAPACITY_PATH);
-        this._forceDischarge();
+        await this._forceDischarge();
         const xmlFile = 'resource:///org/gnome/shell/dbus-interfaces/org.freedesktop.UPower.Device.xml';
         const powerManagerProxy = Gio.DBusProxy.makeProxyWrapper(readFileUri(xmlFile));
         this._proxy = new powerManagerProxy(Gio.DBus.system, BUS_NAME, OBJECT_PATH, (proxy, error) => {
@@ -463,14 +463,15 @@ export const ThinkpadSingleBatteryBAT1 = GObject.registerClass({
     }
 
     async setThresholdLimit(chargingMode) {
+        this._chargingMode = chargingMode;
         this._endValue = this._settings.get_int(`current-${chargingMode}-end-threshold`);
         this._startValue = this._settings.get_int(`current-${chargingMode}-start-threshold`);
         this._skipVerification = this._settings.get_boolean('skip-threshold-verification');
 
         if (!this._batteryMonitoringInitialized)
-            this._initializeBatteryMonitoring();
+            await this._initializeBatteryMonitoring();
         if (this._settings.get_boolean('force-discharge-enabled'))
-            this._forceDischarge();
+            await this._forceDischarge();
 
         if (!this._skipVerification && this._verifyThreshold())
             return exitCode.SUCCESS;
@@ -533,30 +534,29 @@ export const ThinkpadSingleBatteryBAT1 = GObject.registerClass({
         );
     }
 
-    _enableForceDischarge() {
+    async _enableForceDischarge() {
         const forceDischargeModeRead = this._readForceDischargeMode();
         if (forceDischargeModeRead !== 'force-discharge')
-            runCommandCtl(this.ctlPath, 'FORCE_DISCHARGE_BAT1', 'force-discharge');
+            await runCommandCtl(this.ctlPath, 'FORCE_DISCHARGE_BAT1', 'force-discharge');
     }
 
-    _disableForceDischarge() {
+    async _disableForceDischarge() {
         const forceDischargeModeRead = this._readForceDischargeMode();
         if (forceDischargeModeRead !== 'auto')
-            runCommandCtl(this.ctlPath, 'FORCE_DISCHARGE_BAT1', 'auto');
+            await runCommandCtl(this.ctlPath, 'FORCE_DISCHARGE_BAT1', 'auto');
     }
 
-    _forceDischarge() {
-        const chargingMode = this._settings.get_string('charging-mode');
-        const currentThresholdValue = this._settings.get_int(`current-${chargingMode}-end-threshold`);
+    async _forceDischarge() {
+        const currentThresholdValue = this._settings.get_int(`current-${this._chargingMode}-end-threshold`);
         if (this._batteryLevel > currentThresholdValue)
-            this._enableForceDischarge();
+            await this._enableForceDischarge();
         else
-            this._disableForceDischarge();
+            await this._disableForceDischarge();
     }
 
-    _initializeBatteryMonitoring() {
+    async _initializeBatteryMonitoring() {
         if (this._settings.get_boolean('force-discharge-enabled'))
-            this._enableBatteryCapacityMonitoring();
+            await this._enableBatteryCapacityMonitoring();
         this._settings.connectObject(
             'changed::force-discharge-enabled', () => {
                 if (this._settings.get_boolean('force-discharge-enabled'))
@@ -569,9 +569,9 @@ export const ThinkpadSingleBatteryBAT1 = GObject.registerClass({
         this._batteryMonitoringInitialized = true;
     }
 
-    _enableBatteryCapacityMonitoring() {
+    async _enableBatteryCapacityMonitoring() {
         this._batteryLevel = readFileInt(BAT1_CAPACITY_PATH);
-        this._forceDischarge();
+        await this._forceDischarge();
         const xmlFile = 'resource:///org/gnome/shell/dbus-interfaces/org.freedesktop.UPower.Device.xml';
         const powerManagerProxy = Gio.DBusProxy.makeProxyWrapper(readFileUri(xmlFile));
         this._proxy = new powerManagerProxy(Gio.DBus.system, BUS_NAME, OBJECT_PATH, (proxy, error) => {
