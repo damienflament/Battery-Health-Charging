@@ -4,7 +4,8 @@ const {GLib, GObject} = imports.gi;
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
 const Helper = Me.imports.lib.helper;
-const {fileExists, readFile, runCommandCtl} = Helper;
+
+const {exitCode, fileExists, readFile, runCommandCtl} = Helper;
 
 const TUXEDO_AVAILABLE_PROFILE_PATH = '/sys/devices/platform/tuxedo_keyboard/charging_profile/charging_profiles_available';
 const TUXEDO_PATH = '/sys/devices/platform/tuxedo_keyboard/charging_profile/charging_profile';
@@ -29,6 +30,7 @@ var Tuxedo3ModesSingleBattery = GObject.registerClass({
         this.iconForMaxLifeMode = '080';
 
         this._settings = settings;
+        this.ctlPath = null;
     }
 
     isAvailable() {
@@ -43,36 +45,49 @@ var Tuxedo3ModesSingleBattery = GObject.registerClass({
     }
 
     async setThresholdLimit(chargingMode) {
-        this._status = 0;
-        const ctlPath = this._settings.get_string('ctl-path');
-        this._chargingMode = chargingMode;
-        if (this._chargingMode === 'ful') {
+        if (chargingMode === 'ful') {
             this._profile = 'high_capacity';
             this._limit = 100;
-        } else if (this._chargingMode === 'bal') {
+        } else if (chargingMode === 'bal') {
             this._profile = 'balanced';
             this._limit = 90;
-        } else if (this._chargingMode === 'max') {
+        } else if (chargingMode === 'max') {
             this._profile = 'stationary';
             this._limit = 80;
         }
+
         if (this._verifyThreshold())
-            return this._status;
-        [this._status] = await runCommandCtl(ctlPath, 'TUXEDO', this._profile, null, null);
-        if (this._status === 0) {
-            if (this._verifyThreshold())
-                return this._status;
+            return exitCode.SUCCESS;
+
+        const [status] = await runCommandCtl(this.ctlPath, 'TUXEDO', this._profile);
+        if (status === exitCode.ERROR) {
+            this.emit('threshold-applied', 'error');
+            return exitCode.ERROR;
+        } else if (status === exitCode.TIMEOUT) {
+            this.emit('threshold-applied', 'timeout');
+            return exitCode.ERROR;
         }
+
+        if (this._verifyThreshold())
+            return exitCode.SUCCESS;
 
         if (this._delayReadTimeoutId)
             GLib.source_remove(this._delayReadTimeoutId);
         this._delayReadTimeoutId = null;
-        this._delayReadTimeoutId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 200, () => {
-            this._reVerifyThreshold();
-            this._delayReadTimeoutId = null;
-            return GLib.SOURCE_REMOVE;
+
+        await new Promise(resolve => {
+            this._delayReadTimeoutId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 200, () => {
+                resolve();
+                return GLib.SOURCE_REMOVE;
+            });
         });
-        return this._status;
+        this._delayReadTimeoutId = null;
+
+        if (this._verifyThreshold())
+            return exitCode.SUCCESS;
+
+        this.emit('threshold-applied', 'not-updated');
+        return exitCode.ERROR;
     }
 
     _verifyThreshold() {
@@ -83,14 +98,6 @@ var Tuxedo3ModesSingleBattery = GObject.registerClass({
             return true;
         }
         return false;
-    }
-
-    _reVerifyThreshold() {
-        if (this._status === 0) {
-            if (this._verifyThreshold())
-                return;
-        }
-        this.emit('threshold-applied', 'failed');
     }
 
     destroy() {

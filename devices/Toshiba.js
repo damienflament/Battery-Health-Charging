@@ -1,10 +1,11 @@
 'use strict';
 /* Toshiba Laptops */
-const {Gio, GObject} = imports.gi;
+const {GLib, GObject} = imports.gi;
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
 const Helper = Me.imports.lib.helper;
-const {fileExists, readFileInt, readFileUri, runCommandCtl} = Helper;
+
+const {exitCode, fileExists, readFileInt, runCommandCtl} = Helper;
 
 const VENDOR_TOSHIBA = '/sys/module/toshiba_acpi';
 const BAT0_END_PATH = '/sys/class/power_supply/BAT0/charge_control_end_threshold';
@@ -12,13 +13,9 @@ const BAT1_END_PATH = '/sys/class/power_supply/BAT1/charge_control_end_threshold
 const BAT0_CAPACITY_PATH = '/sys/class/power_supply/BAT0/capacity';
 const BAT1_CAPACITY_PATH = '/sys/class/power_supply/BAT1/capacity';
 
-const BUS_NAME = 'org.freedesktop.UPower';
-const OBJECT_PATH = '/org/freedesktop/UPower/devices/DisplayDevice';
-
 var ToshibaSingleBatteryBAT0 = GObject.registerClass({
     Signals: {
         'threshold-applied': {param_types: [GObject.TYPE_STRING]},
-        'battery-level-changed': {},
     },
 }, class ToshibaSingleBatteryBAT0 extends GObject.Object {
     constructor(settings) {
@@ -35,9 +32,9 @@ var ToshibaSingleBatteryBAT0 = GObject.registerClass({
         this.deviceUsesModeNotValue = false;
         this.iconForFullCapMode = '100';
         this.iconForMaxLifeMode = '080';
-        this.dischargeBeforeSet = 80;
 
         this._settings = settings;
+        this.ctlPath = null;
     }
 
     isAvailable() {
@@ -45,61 +42,80 @@ var ToshibaSingleBatteryBAT0 = GObject.registerClass({
             return false;
         if (!fileExists(BAT0_END_PATH))
             return false;
-        this._initializeBatteryMonitoring();
+
+        this.endLimitValue = readFileInt(this._endPath);
         return true;
     }
 
     async setThresholdLimit(chargingMode) {
-        const ctlPath = this._settings.get_string('ctl-path');
         let endValue;
         if (chargingMode === 'ful')
             endValue = 100;
         else if (chargingMode === 'max')
             endValue = 80;
-        const [status] = await runCommandCtl(ctlPath, 'BAT0_END', `${endValue}`, null, null);
-        if (status === 0) {
-            this.endLimitValue = endValue;
-            this.emit('threshold-applied', 'success');
-            return 0;
+        const [status] = await runCommandCtl(this.ctlPath, 'BAT0_END', `${endValue}`);
+        if (status === exitCode.ERROR) {
+            this.emit('threshold-applied', 'error');
+            return exitCode.ERROR;
+        } else if (status === exitCode.TIMEOUT) {
+            this.emit('threshold-applied', 'timeout');
+            return exitCode.ERROR;
         }
-        this.emit('threshold-applied', 'failed');
-        return 1;
-    }
+        // Temp
+        if (this._delayReadTimeoutId)
+            GLib.source_remove(this._delayReadTimeoutId);
+        this._delayReadTimeoutId = null;
 
-    _initializeBatteryMonitoring() {
-        const xmlFile = 'resource:///org/gnome/shell/dbus-interfaces/org.freedesktop.UPower.Device.xml';
-        const powerManagerProxy = Gio.DBusProxy.makeProxyWrapper(readFileUri(xmlFile));
-        this._proxy = new powerManagerProxy(Gio.DBus.system, BUS_NAME, OBJECT_PATH,
-            (proxy, error) => {
-                if (error) {
-                    log(error.message);
-                } else {
-                    this._proxyId = this._proxy.connect('g-properties-changed', () => {
-                        const batteryLevel = this._proxy.Percentage;
-                        if (this.batteryLevel !== batteryLevel) {
-                            this.batteryLevel = batteryLevel;
-                            this.emit('battery-level-changed');
-                        }
-                    });
-                }
+        await new Promise(resolve => {
+            this._delayReadTimeoutId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 200, () => {
+                resolve();
+                return GLib.SOURCE_REMOVE;
             });
+        });
+        this._delayReadTimeoutId = null;
+        // Temp
 
-        this.batteryLevel = readFileInt(BAT0_CAPACITY_PATH);
-        this.emit('battery-level-changed');
+        this.endLimitValue = readFileInt(BAT0_END_PATH);
+        if (endValue === this.endLimitValue) {
+            this.emit('threshold-applied', 'success');
+            return exitCode.SUCCESS;
+        }
+
+        if (this._delayReadTimeoutId)
+            GLib.source_remove(this._delayReadTimeoutId);
+        this._delayReadTimeoutId = null;
+
+        await new Promise(resolve => {
+            this._delayReadTimeoutId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 200, () => {
+                resolve();
+                return GLib.SOURCE_REMOVE;
+            });
+        });
+        this._delayReadTimeoutId = null;
+
+        this.endLimitValue = readFileInt(BAT0_END_PATH);
+        if (endValue === this.endLimitValue) {
+            this.emit('threshold-applied', 'success');
+            return exitCode.SUCCESS;
+        } else if (endValue === 80 && readFileInt(BAT0_CAPACITY_PATH) > 75) {
+            this.endLimitValue = 100;
+            this.emit('threshold-applied', 'discharge-battery');
+            return exitCode.SUCCESS;
+        }
+        this.emit('threshold-applied', 'not-updated');
+        return exitCode.ERROR;
     }
 
     destroy() {
-        if (this._proxy)
-            this._proxy.disconnect(this._proxyId);
-        this._proxyId = null;
-        this._proxy = null;
+        if (this._delayReadTimeoutId)
+            GLib.source_remove(this._delayReadTimeoutId);
+        this._delayReadTimeoutId = null;
     }
 });
 
 var ToshibaSingleBatteryBAT1 = GObject.registerClass({
     Signals: {
         'threshold-applied': {param_types: [GObject.TYPE_STRING]},
-        'battery-level-changed': {},
     },
 }, class ToshibaSingleBatteryBAT1 extends GObject.Object {
     constructor(settings) {
@@ -116,9 +132,9 @@ var ToshibaSingleBatteryBAT1 = GObject.registerClass({
         this.deviceUsesModeNotValue = false;
         this.iconForFullCapMode = '100';
         this.iconForMaxLifeMode = '080';
-        this.dischargeBeforeSet = 80;
 
         this._settings = settings;
+        this.ctlPath = null;
     }
 
     isAvailable() {
@@ -126,54 +142,74 @@ var ToshibaSingleBatteryBAT1 = GObject.registerClass({
             return false;
         if (!fileExists(BAT1_END_PATH))
             return false;
-        this._initializeBatteryMonitoring();
+
+        this.endLimitValue = readFileInt(BAT1_END_PATH);
         return true;
     }
 
     async setThresholdLimit(chargingMode) {
-        const ctlPath = this._settings.get_string('ctl-path');
         let endValue;
         if (chargingMode === 'ful')
             endValue = 100;
         else if (chargingMode === 'max')
             endValue = 80;
-        const [status] = await runCommandCtl(ctlPath, 'BAT1_END', `${endValue}`, null, null);
-        if (status === 0) {
-            this.endLimitValue = endValue;
-            this.emit('threshold-applied', 'success');
-            return 0;
+        const [status] = await runCommandCtl(this.ctlPath, 'BAT1_END', `${endValue}`);
+        if (status === exitCode.ERROR) {
+            this.emit('threshold-applied', 'error');
+            return exitCode.ERROR;
+        } else if (status === exitCode.TIMEOUT) {
+            this.emit('threshold-applied', 'timeout');
+            return exitCode.ERROR;
         }
-        this.emit('threshold-applied', 'failed');
-        return 1;
-    }
+        // Temp
+        if (this._delayReadTimeoutId)
+            GLib.source_remove(this._delayReadTimeoutId);
+        this._delayReadTimeoutId = null;
 
-    _initializeBatteryMonitoring() {
-        const xmlFile = 'resource:///org/gnome/shell/dbus-interfaces/org.freedesktop.UPower.Device.xml';
-        const powerManagerProxy = Gio.DBusProxy.makeProxyWrapper(readFileUri(xmlFile));
-        this._proxy = new powerManagerProxy(Gio.DBus.system, BUS_NAME, OBJECT_PATH,
-            (proxy, error) => {
-                if (error) {
-                    log(error.message);
-                } else {
-                    this._proxyId = this._proxy.connect('g-properties-changed', () => {
-                        const batteryLevel = this._proxy.Percentage;
-                        if (this.batteryLevel !== batteryLevel) {
-                            this.batteryLevel = batteryLevel;
-                            this.emit('battery-level-changed');
-                        }
-                    });
-                }
+        await new Promise(resolve => {
+            this._delayReadTimeoutId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 200, () => {
+                resolve();
+                return GLib.SOURCE_REMOVE;
             });
+        });
+        this._delayReadTimeoutId = null;
+        // Temp
 
-        this.batteryLevel = readFileInt(BAT1_CAPACITY_PATH);
-        this.emit('battery-level-changed');
+        this.endLimitValue = readFileInt(BAT1_END_PATH);
+        if (endValue === this.endLimitValue) {
+            this.emit('threshold-applied', 'success');
+            return exitCode.SUCCESS;
+        }
+
+        if (this._delayReadTimeoutId)
+            GLib.source_remove(this._delayReadTimeoutId);
+        this._delayReadTimeoutId = null;
+
+        await new Promise(resolve => {
+            this._delayReadTimeoutId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 200, () => {
+                resolve();
+                return GLib.SOURCE_REMOVE;
+            });
+        });
+        this._delayReadTimeoutId = null;
+
+        this.endLimitValue = readFileInt(BAT1_END_PATH);
+        if (endValue === this.endLimitValue) {
+            this.emit('threshold-applied', 'success');
+            return exitCode.SUCCESS;
+        } else if (endValue === 80 && readFileInt(BAT1_CAPACITY_PATH) > 75) {
+            this.endLimitValue = 100;
+            this.emit('threshold-applied', 'discharge-battery');
+            return exitCode.SUCCESS;
+        }
+        this.emit('threshold-applied', 'not-updated');
+        return exitCode.ERROR;
     }
 
     destroy() {
-        if (this._proxy)
-            this._proxy.disconnect(this._proxyId);
-        this._proxyId = null;
-        this._proxy = null;
+        if (this._delayReadTimeoutId)
+            GLib.source_remove(this._delayReadTimeoutId);
+        this._delayReadTimeoutId = null;
     }
 });
 

@@ -4,7 +4,8 @@ const {GLib, GObject} = imports.gi;
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
 const Helper = Me.imports.lib.helper;
-const {fileExists, readFileInt, runCommandCtl} = Helper;
+
+const {exitCode, fileExists, readFileInt, runCommandCtl} = Helper;
 
 const PANASONIC_PATH = '/sys/devices/platform/panasonic/eco_mode';
 
@@ -25,6 +26,7 @@ var PanasonicSingleBattery = GObject.registerClass({
         this.deviceUsesModeNotValue = true;
 
         this._settings = settings;
+        this.ctlPath = null;
     }
 
     isAvailable() {
@@ -35,47 +37,53 @@ var PanasonicSingleBattery = GObject.registerClass({
     }
 
     async setThresholdLimit(chargingMode) {
-        this._status = 0;
-        const ctlPath = this._settings.get_string('ctl-path');
-        this._chargingMode = chargingMode;
-        if (this._chargingMode === 'ful')
+        if (chargingMode === 'ful')
             this._ecoMode = 0;
-        else if (this._chargingMode === 'max')
+        else if (chargingMode === 'max')
             this._ecoMode = 1;
+
         if (this._verifyThreshold())
-            return this._status;
-        [this._status] = await runCommandCtl(ctlPath, 'PANASONIC', `${this._ecoMode}`, null, null);
-        if (this._status === 0) {
-            if (this._verifyThreshold())
-                return this._status;
+            return exitCode.SUCCESS;
+
+        const [status] = await runCommandCtl(this.ctlPath, 'PANASONIC', `${this._ecoMode}`);
+        if (status === exitCode.ERROR) {
+            this.emit('threshold-applied', 'error');
+            return exitCode.ERROR;
+        } else if (status === exitCode.TIMEOUT) {
+            this.emit('threshold-applied', 'timeout');
+            return exitCode.ERROR;
         }
+
+        if (this._verifyThreshold())
+            return exitCode.SUCCESS;
 
         if (this._delayReadTimeoutId)
             GLib.source_remove(this._delayReadTimeoutId);
         this._delayReadTimeoutId = null;
-        this._delayReadTimeoutId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 200, () => {
-            this._reVerifyThreshold();
-            this._delayReadTimeoutId = null;
-            return GLib.SOURCE_REMOVE;
+
+        await new Promise(resolve => {
+            this._delayReadTimeoutId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 200, () => {
+                resolve();
+                return GLib.SOURCE_REMOVE;
+            });
         });
-        return this._status;
+        this._delayReadTimeoutId = null;
+
+        if (this._verifyThreshold())
+            return exitCode.SUCCESS;
+
+        this.emit('threshold-applied', 'not-updated');
+        return exitCode.ERROR;
     }
 
     _verifyThreshold() {
-        if (readFileInt(PANASONIC_PATH) === this._ecoMode) {
-            this.mode = this._chargingMode;
+        const ecoMode = readFileInt(PANASONIC_PATH);
+        this.mode = ecoMode === 1 ? 'max' : 'ful';
+        if (this._ecoMode === ecoMode) {
             this.emit('threshold-applied', 'success');
             return true;
         }
         return false;
-    }
-
-    _reVerifyThreshold() {
-        if (this._status === 0) {
-            if (this._verifyThreshold())
-                return;
-        }
-        this.emit('threshold-applied', 'failed');
     }
 
     destroy() {

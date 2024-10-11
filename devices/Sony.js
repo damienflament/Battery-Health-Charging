@@ -4,7 +4,8 @@ const {GLib, GObject} = imports.gi;
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
 const Helper = Me.imports.lib.helper;
-const {fileExists, readFileInt, runCommandCtl} = Helper;
+
+const {exitCode, fileExists, readFileInt, runCommandCtl} = Helper;
 
 const SONY_PATH = '/sys/devices/platform/sony-laptop/battery_care_limiter';
 const SONY_HIGHSPEED_CHARGING_PATH = '/sys/devices/platform/sony-laptop/battery_highspeed_charging';
@@ -29,6 +30,7 @@ var SonySingleBattery = GObject.registerClass({
         this.iconForMaxLifeMode = '050';
 
         this._settings = settings;
+        this.ctlPath = null;
     }
 
     isAvailable() {
@@ -40,10 +42,8 @@ var SonySingleBattery = GObject.registerClass({
     }
 
     async setThresholdLimit(chargingMode) {
-        this._status = 0;
         this._updateHighSpeedCharging = false;
         let highSpeedCharging = 'unsupported';
-        const ctlPath = this._settings.get_string('ctl-path');
         this._chargingMode = chargingMode;
         if (this._chargingMode === 'ful') {
             this._batteryCareLimiter = 0;
@@ -58,31 +58,46 @@ var SonySingleBattery = GObject.registerClass({
             this._batteryCareLimiter = 0;
             this._highSpeedCharging = 1;
         }
+
         if (this._verifyThreshold())
-            return this._status;
+            return exitCode.SUCCESS;
+
         if (this._updateHighSpeedCharging) {
             if (this._highSpeedCharging === 1)
                 highSpeedCharging = 'on';
             else if (this._highSpeedCharging === 0)
                 highSpeedCharging = 'off';
         }
-        [this._status] = await runCommandCtl(ctlPath, 'SONY', `${this._batteryCareLimiter}`, highSpeedCharging, null);
-        if (this._status === 0) {
-            if (this._verifyThreshold()) {
-                this._updateHighSpeedCharging = false;
-                return this._status;
-            }
+
+        const [status] = await runCommandCtl(this.ctlPath, 'SONY', `${this._batteryCareLimiter}`, highSpeedCharging);
+        if (status === exitCode.ERROR) {
+            this.emit('threshold-applied', 'error');
+            return exitCode.ERROR;
+        } else if (status === exitCode.TIMEOUT) {
+            this.emit('threshold-applied', 'timeout');
+            return exitCode.ERROR;
         }
+
+        if (this._verifyThreshold())
+            return exitCode.SUCCESS;
 
         if (this._delayReadTimeoutId)
             GLib.source_remove(this._delayReadTimeoutId);
         this._delayReadTimeoutId = null;
-        this._delayReadTimeoutId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 200, () => {
-            this._reVerifyThreshold();
-            this._delayReadTimeoutId = null;
-            return GLib.SOURCE_REMOVE;
+
+        await new Promise(resolve => {
+            this._delayReadTimeoutId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 200, () => {
+                resolve();
+                return GLib.SOURCE_REMOVE;
+            });
         });
-        return this._status;
+        this._delayReadTimeoutId = null;
+
+        if (this._verifyThreshold())
+            return exitCode.SUCCESS;
+
+        this.emit('threshold-applied', 'not-updated');
+        return exitCode.ERROR;
     }
 
     _verifyThreshold() {
@@ -90,25 +105,16 @@ var SonySingleBattery = GObject.registerClass({
             this._updateHighSpeedCharging = true;
             return false;
         }
+        this._updateHighSpeedCharging = false;
         const endLimitValue  = readFileInt(SONY_PATH);
+        this.endLimitValue = endLimitValue === 0 ? 100 : endLimitValue;
         if (this._batteryCareLimiter !== endLimitValue)
             return false;
-        this._updateHighSpeedCharging = false;
         this.mode = this._chargingMode;
-        this.endLimitValue = endLimitValue === 0 ? 100 : endLimitValue;
         this.emit('threshold-applied', 'success');
         return true;
     }
 
-    _reVerifyThreshold() {
-        if (this._status === 0) {
-            if (this._verifyThreshold()) {
-                this._updateHighSpeedCharging = false;
-                return;
-            }
-        }
-        this.emit('threshold-applied', 'failed');
-    }
 
     destroy() {
         if (this._delayReadTimeoutId)

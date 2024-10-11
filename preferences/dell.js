@@ -1,14 +1,18 @@
 'use strict';
-const {Adw, Gio, GLib, GObject, Secret} = imports.gi;
+const {Adw, Gio, GLib, Gtk, GObject, Secret} = imports.gi;
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
+
+const gettextDomain = Me.metadata['gettext-domain'];
+const Gettext = imports.gettext.domain(gettextDomain);
+const _ = Gettext.gettext;
 
 var Dell = GObject.registerClass({
     GTypeName: 'BHC_Dell',
     Template: `file://${GLib.build_filenamev([Me.path, 'ui', 'dell.ui'])}`,
     InternalChildren: [
         'device_settings_group',
-        'choose_package',
+        'choose_configuration',
         'bios_settings_group',
         'need_bios_password',
         'password_entry_box',
@@ -19,25 +23,56 @@ var Dell = GObject.registerClass({
     constructor(settings) {
         super({});
         this._settings = settings;
+        const configurationMapping = {
+            'sysfs': _('Sysfs node'),
+            'libsmbios': _('Libsmbios'),
+            'cctk': _('Dell Command Center'),
+        };
 
-        this._showPackageOption = this._settings.get_boolean('detected-libsmbios');
-        this._device_settings_group.visible = this._showPackageOption;
+        const showPackageOption = this._settings.get_strv('multiple-configuration-supported').length > 1;
+        this._device_settings_group.visible = showPackageOption;
 
-        this._bios_settings_group.visible = !this._showPackageOption || (this._settings.get_int('dell-package-type') === 1);
+        if (showPackageOption) {
+            const supportedConfigs = this._settings.get_strv('multiple-configuration-supported');
+            const displayNames = supportedConfigs.map(config => configurationMapping[config]);
+            const stringList = new Gtk.StringList();
+            displayNames.forEach(name => stringList.append(name));
+            this._choose_configuration.set_model(stringList);
+            const currentConfigMode = this._settings.get_string('configuration-mode');
+            const initialSelectedIndex = supportedConfigs.indexOf(currentConfigMode);
+            if (initialSelectedIndex !== -1)
+                this._choose_configuration.set_selected(initialSelectedIndex);
+
+            this._choose_configuration.connect('notify::selected-item', () => {
+                const selectedIndex = this._choose_configuration.get_selected();
+                const selectedConfig = supportedConfigs[selectedIndex];
+                this._settings.set_string('configuration-mode', selectedConfig);
+            });
+        }
+
+        this._bios_settings_group.visible = this._settings.get_string('configuration-mode') === 'cctk';
+        if (this._settings.get_string('configuration-mode') === 'cctk')
+            this._addBiosPasswordOption();
+
+        this._settings.connect('changed::configuration-mode', () => {
+            if (this._settings.get_string('configuration-mode') === 'cctk') {
+                if (this._secretSchema)
+                    this._bios_settings_group.visible = true;
+                else
+                    this._addBiosPasswordOption();
+            } else {
+                this._bios_settings_group.visible = false;
+            }
+        });
+    }
+
+    _addBiosPasswordOption() {
+        this._bios_settings_group.visible = true;
         this._success_keyring_icon.visible = false;
         this._failed_keyring_icon.visible = false;
 
         this._secretSchema = new Secret.Schema('org.gnome.shell.extensions.Battery-Health-Charging',
             Secret.SchemaFlags.NONE, {'string': Secret.SchemaAttributeType.STRING});
-
-        if (this._showPackageOption) {
-            this._settings.bind(
-                'dell-package-type',
-                this._choose_package,
-                'selected',
-                Gio.SettingsBindFlags.DEFAULT
-            );
-        }
 
         this._settings.bind(
             'need-bios-password',
@@ -45,10 +80,6 @@ var Dell = GObject.registerClass({
             'active',
             Gio.SettingsBindFlags.DEFAULT
         );
-
-        this._settings.connect('changed::dell-package-type', () => {
-            this._bios_settings_group.visible = this._settings.get_int('dell-package-type') === 1;
-        });
 
         this._password_entry_box.connect('activate', () => {
             this._setPassword(this._password_entry_box.text);
@@ -65,7 +96,7 @@ var Dell = GObject.registerClass({
             'Battery Health Charging Bios Password', pass, null, (o, result) => {
                 try {
                     this._status = Secret.password_store_finish(result);
-                } catch (e) {
+                } catch {
                     log('Battery Health Charging: Failed to store password on Gnome Keyring');
                     this._status = false;
                 }
@@ -85,7 +116,7 @@ var Dell = GObject.registerClass({
         Secret.password_clear(this._secretSchema, {'string': 'Battery-Health-Charging-Gnome-Extension'}, null, (o, result) => {
             try {
                 Secret.password_clear_finish(result);
-            } catch (e) {
+            } catch {
                 log('Battery Health Charging: Failed to clear password from Gnome Keyring');
             }
         });

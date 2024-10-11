@@ -4,7 +4,8 @@ const {GLib, GObject} = imports.gi;
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
 const Helper = Me.imports.lib.helper;
-const {fileExists, readFileInt, runCommandCtl} = Helper;
+
+const {exitCode, fileExists, readFileInt, runCommandCtl} = Helper;
 
 const ACER_PATH = '/sys/bus/wmi/drivers/acer-wmi-battery/health_mode';
 
@@ -27,6 +28,7 @@ var AcerSingleBattery = GObject.registerClass({
         this.iconForMaxLifeMode = '080';
 
         this._settings = settings;
+        this.ctlPath = null;
     }
 
     isAvailable() {
@@ -36,52 +38,53 @@ var AcerSingleBattery = GObject.registerClass({
     }
 
     async setThresholdLimit(chargingMode) {
-        this._status = 0;
-        const ctlPath = this._settings.get_string('ctl-path');
-        this._chargingMode = chargingMode;
-        if (this._chargingMode === 'ful')
+        if (chargingMode === 'ful')
             this._healthMode = 0;
-        else if (this._chargingMode === 'max')
+        else if (chargingMode === 'max')
             this._healthMode = 1;
+
         if (this._verifyThreshold())
-            return this._status;
-        [this._status] = await runCommandCtl(ctlPath, 'ACER', `${this._healthMode}`, null, null);
-        if (this._status === 0) {
-            if (this._verifyThreshold())
-                return this._status;
+            return exitCode.SUCCESS;
+
+        const [status] = await runCommandCtl(this.ctlPath, 'ACER', `${this._healthMode}`);
+        if (status === exitCode.ERROR) {
+            this.emit('threshold-applied', 'error');
+            return exitCode.ERROR;
+        } else if (status === exitCode.TIMEOUT) {
+            this.emit('threshold-applied', 'timeout');
+            return exitCode.ERROR;
         }
+
+        if (this._verifyThreshold())
+            return exitCode.SUCCESS;
 
         if (this._delayReadTimeoutId)
             GLib.source_remove(this._delayReadTimeoutId);
         this._delayReadTimeoutId = null;
 
-        this._delayReadTimeoutId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 200, () => {
-            this._reVerifyThreshold();
-            this._delayReadTimeoutId = null;
-            return GLib.SOURCE_REMOVE;
+        await new Promise(resolve => {
+            this._delayReadTimeoutId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 200, () => {
+                resolve();
+                return GLib.SOURCE_REMOVE;
+            });
         });
-        return this._status;
+        this._delayReadTimeoutId = null;
+
+        if (this._verifyThreshold())
+            return exitCode.SUCCESS;
+
+        this.emit('threshold-applied', 'not-updated');
+        return exitCode.ERROR;
     }
 
     _verifyThreshold() {
-        const endLimitValue = readFileInt(ACER_PATH);
-        if (this._healthMode === endLimitValue) {
-            if (endLimitValue === 1)
-                this.endLimitValue = 80;
-            else
-                this.endLimitValue = 100;
+        const healthMode = readFileInt(ACER_PATH);
+        this.endLimitValue = healthMode === 1 ? 80 : 100;
+        if (this._healthMode === healthMode) {
             this.emit('threshold-applied', 'success');
             return true;
         }
         return false;
-    }
-
-    _reVerifyThreshold() {
-        if (this._status === 0) {
-            if (this._verifyThreshold())
-                return;
-        }
-        this.emit('threshold-applied', 'failed');
     }
 
     destroy() {

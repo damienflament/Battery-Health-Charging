@@ -4,9 +4,10 @@ const {GLib, GObject} = imports.gi;
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
 const Helper = Me.imports.lib.helper;
-const {fileExists, readFileInt, runCommandCtl} = Helper;
 
-const VENDOR_SYSTEM76 = '/sys/module/librem_ec';
+const {exitCode, fileExists, readFileInt, runCommandCtl} = Helper;
+
+const VENDOR_LIBREM = '/sys/module/librem_ec';
 const BAT0_END_PATH = '/sys/class/power_supply/BAT0/charge_control_end_threshold';
 const BAT0_START_PATH = '/sys/class/power_supply/BAT0/charge_control_start_threshold';
 
@@ -45,10 +46,11 @@ var LibremSingleBatteryBAT0 = GObject.registerClass({
         this.incrementsPage = 5;
 
         this._settings = settings;
+        this.ctlPath = null;
     }
 
     isAvailable() {
-        if (!fileExists(VENDOR_SYSTEM76))
+        if (!fileExists(VENDOR_LIBREM))
             return false;
         if (!fileExists(BAT0_START_PATH))
             return false;
@@ -58,53 +60,53 @@ var LibremSingleBatteryBAT0 = GObject.registerClass({
     }
 
     async setThresholdLimit(chargingMode) {
-        this._status = 0;
-        const ctlPath = this._settings.get_string('ctl-path');
         this._endValue = this._settings.get_int(`current-${chargingMode}-end-threshold`);
         this._startValue = this._settings.get_int(`current-${chargingMode}-start-threshold`);
-        if (this._verifyThreshold())
-            return this._status;
-        // Some device wont update end threshold if start threshold > end threshold
-        if (this._startValue >= this._oldEndValue)
-            [this._status] = await runCommandCtl(ctlPath, 'BAT0_END_START', `${this._endValue}`, `${this._startValue}`, null);
-        else
-            [this._status] = await runCommandCtl(ctlPath, 'BAT0_START_END', `${this._endValue}`, `${this._startValue}`, null);
 
-        if (this._status === 0) {
-            if (this._verifyThreshold())
-                return this._status;
+        if (this._verifyThreshold())
+            return exitCode.SUCCESS;
+
+        // Some device wont update end threshold if start threshold > end threshold
+        const cmd = this._startValue >= this.endLimitValue ? 'BAT0_END_START' : 'BAT0_START_END';
+        const [status] = await runCommandCtl(this.ctlPath, cmd, `${this._endValue}`, `${this._startValue}`);
+        if (status === exitCode.ERROR) {
+            this.emit('threshold-applied', 'error');
+            return exitCode.ERROR;
+        } else if (status === exitCode.TIMEOUT) {
+            this.emit('threshold-applied', 'timeout');
+            return exitCode.ERROR;
         }
+
+        if (this._verifyThreshold())
+            return exitCode.SUCCESS;
 
         if (this._delayReadTimeoutId)
             GLib.source_remove(this._delayReadTimeoutId);
         this._delayReadTimeoutId = null;
 
-        this._delayReadTimeoutId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 200, () => {
-            this._reVerifyThreshold();
-            this._delayReadTimeoutId = null;
-            return GLib.SOURCE_REMOVE;
+        await new Promise(resolve => {
+            this._delayReadTimeoutId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 200, () => {
+                resolve();
+                return GLib.SOURCE_REMOVE;
+            });
         });
-        return this._status;
+        this._delayReadTimeoutId = null;
+
+        if (this._verifyThreshold())
+            return exitCode.SUCCESS;
+
+        this.emit('threshold-applied', 'not-updated');
+        return exitCode.ERROR;
     }
 
     _verifyThreshold() {
-        this._oldEndValue = readFileInt(BAT0_END_PATH);
-        this._oldStartValue = readFileInt(BAT0_START_PATH);
-        if ((this._oldEndValue === this._endValue) && (this._oldStartValue === this._startValue)) {
-            this.endLimitValue = this._endValue;
-            this.startLimitValue = this._startValue;
+        this.endLimitValue = readFileInt(BAT0_END_PATH);
+        this.startLimitValue = readFileInt(BAT0_START_PATH);
+        if (this.endLimitValue === this._endValue && this.startLimitValue === this._startValue) {
             this.emit('threshold-applied', 'success');
             return true;
         }
         return false;
-    }
-
-    _reVerifyThreshold() {
-        if (this._status === 0) {
-            if (this._verifyThreshold())
-                return;
-        }
-        this.emit('threshold-applied', 'failed');
     }
 
     destroy() {

@@ -4,7 +4,7 @@ const Config = imports.misc.config;
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
 const Helper = Me.imports.lib.helper;
-const {execCheck} = Helper;
+const {exitCode, execCheck} = Helper;
 
 const gettextDomain = Me.metadata['gettext-domain'];
 const Gettext = imports.gettext.domain(gettextDomain);
@@ -192,12 +192,16 @@ var General = GObject.registerClass({
             user,
             action,
         ];
-        const [status, output] = await execCheck(argv);
+        const [status, output] = await execCheck(argv, false);
         log(`Battery Health Charging: stdout = ${output}`);
         log(`Battery Health Charging: status = ${status}`);
+
+        if (status === exitCode.PRIVILEGE_REQUIRED)
+            return;
+
         const toast = new Adw.Toast();
         toast.set_timeout(3);
-        if (status === 0) {
+        if (status === exitCode.SUCCESS) {
             if (action === 'install' || action === 'update') {
                 this._settings.set_string('polkit-status', 'installed');
                 toast.set_title(_('Installation Successful.'));
@@ -208,7 +212,6 @@ var General = GObject.registerClass({
         } else {
             toast.set_title(_('Encountered an unexpected error.'));
         }
-        if (status !== 126)
-            this.root.add_toast(toast);
+        this.root.add_toast(toast);
     }
 });

@@ -4,7 +4,8 @@ const {GLib, GObject} = imports.gi;
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
 const Helper = Me.imports.lib.helper;
-const {fileExists, readFile, runCommandCtl} = Helper;
+
+const {exitCode, fileExists, readFile, runCommandCtl} = Helper;
 
 const HUAWEI_PATH = '/sys/devices/platform/huawei-wmi/charge_control_thresholds';
 
@@ -43,6 +44,7 @@ var HuaweiSingleBattery = GObject.registerClass({
         this.incrementsPage = 5;
 
         this._settings = settings;
+        this.ctlPath = null;
     }
 
     isAvailable() {
@@ -52,49 +54,53 @@ var HuaweiSingleBattery = GObject.registerClass({
     }
 
     async setThresholdLimit(chargingMode) {
-        this._status = 0;
         this._limitValue = ['0', '0'];
-        const ctlPath = this._settings.get_string('ctl-path');
         this._endValue = this._settings.get_int(`current-${chargingMode}-end-threshold`);
         this._startValue = this._settings.get_int(`current-${chargingMode}-start-threshold`);
-        if (this._status === 0) {
-            if (this._verifyThreshold())
-                return this._status;
+
+        if (this._verifyThreshold())
+            return exitCode.SUCCESS;
+
+        const [status] = await runCommandCtl(this.ctlPath, 'HUAWEI', `${this._endValue}`, `${this._startValue}`);
+        if (status === exitCode.ERROR) {
+            this.emit('threshold-applied', 'error');
+            return exitCode.ERROR;
+        } else if (status === exitCode.TIMEOUT) {
+            this.emit('threshold-applied', 'timeout');
+            return exitCode.ERROR;
         }
-        [this._status] = await runCommandCtl(ctlPath, 'HUAWEI', `${this._endValue}`, `${this._startValue}`, null);
-        if (this._status === 0) {
-            if (this._verifyThreshold())
-                return this._status;
-        }
+
+        if (this._verifyThreshold())
+            return exitCode.SUCCESS;
+
         if (this._delayReadTimeoutId)
             GLib.source_remove(this._delayReadTimeoutId);
         this._delayReadTimeoutId = null;
 
-        this._delayReadTimeoutId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 200, () => {
-            this._reVerifyThreshold();
-            this._delayReadTimeoutId = null;
-            return GLib.SOURCE_REMOVE;
+        await new Promise(resolve => {
+            this._delayReadTimeoutId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 200, () => {
+                resolve();
+                return GLib.SOURCE_REMOVE;
+            });
         });
-        return this._status;
+        this._delayReadTimeoutId = null;
+
+        if (this._verifyThreshold())
+            return exitCode.SUCCESS;
+
+        this.emit('threshold-applied', 'not-updated');
+        return exitCode.ERROR;
     }
 
     _verifyThreshold() {
         this._limitValue = readFile(HUAWEI_PATH).split(' ');
-        if ((this._endValue === parseInt(this._limitValue[1])) && (this._startValue === parseInt(this._limitValue[0]))) {
-            this.endLimitValue = this._endValue;
-            this.startLimitValue = this._startValue;
+        this.endLimitValue = parseInt(this._limitValue[1]);
+        this.startLimitValue = parseInt(this._limitValue[0]);
+        if (this._endValue === this.endLimitValue && this._startValue === this.startLimitValue) {
             this.emit('threshold-applied', 'success');
             return true;
         }
         return false;
-    }
-
-    _reVerifyThreshold() {
-        if (this._status === 0) {
-            if (this._verifyThreshold())
-                return;
-        }
-        this.emit('threshold-applied', 'failed');
     }
 
     destroy() {
