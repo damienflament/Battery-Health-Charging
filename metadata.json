@@ -1,0 +1,10 @@
+{
+  "uuid": "test@maniacx.github.com",
+  "name": "test-pkexec",
+  "description": "test-pkexec",
+  "url": "https://maniacx.com",
+  "shell-version": [ "45", "46", "47" ],
+  "session-modes": ["user", "unlock-dialog"],
+  "version": 1,
+  "gettext-domain": "Battery-Health-Charging@maniacx.github.com"
+}
